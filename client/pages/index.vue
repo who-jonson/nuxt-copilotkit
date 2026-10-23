@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useDevtoolsClient } from '@nuxt/devtools-kit/iframe-client'
+import { useDevtoolsClient } from '@nuxt/devtools-kit/iframe-client';
 
-const client = useDevtoolsClient()
+const client = useDevtoolsClient();
 </script>
 
 <template>

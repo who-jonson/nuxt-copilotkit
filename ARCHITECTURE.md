@@ -42,6 +42,8 @@ flowchart TB
     SM -.->|"post-v1: Voltagent · auth · persistence"| SV
 ```
 
+> **Erratum (2026-10-23, Spike A):** the barrel carries **21** upstream composables (not 13) and 30 upstream components are registered; module-owned injection keys ship at `#copilotkit/keys` because upstream `CopilotKitKey` is private.
+
 ## 2. Config flow (one way)
 
 Module options → `runtimeConfig` → runtime code. Never the reverse, never build-time reads in templates.

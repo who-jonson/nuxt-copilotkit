@@ -45,9 +45,21 @@
   "dependencies": {
     "@nuxt/devtools-kit": "catalog:prod",
     "@nuxt/kit": "catalog:prod",
+    "h3": "catalog:prod",
     "sirv": "catalog:prod"
   },
+  "peerDependencies": {
+    "@copilotkit/runtime": "catalog:prod",
+    "@copilotkit/vue": "catalog:prod"
+  },
+  "peerDependenciesMeta": {
+    "@copilotkit/runtime": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@copilotkit/runtime": "catalog:prod",
+    "@copilotkit/vue": "catalog:prod",
     "@iconify-json/carbon": "catalog:dev",
     "@nuxt/content": "catalog:dev",
     "@nuxt/devtools": "catalog:dev",

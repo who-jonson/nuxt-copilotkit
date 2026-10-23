@@ -1,10 +1,10 @@
-import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
+import { createConfigForNuxt } from '@nuxt/eslint-config/flat';
 
 export default createConfigForNuxt({
   features: {
     tooling: true,
     stylistic: {
-      commaDangle: false,
+      commaDangle: 'never',
       quotes: 'single',
       semi: true
     }
@@ -13,7 +13,7 @@ export default createConfigForNuxt({
     root: [
       '',
       'playground',
-      'client',
-    ],
-  },
-})
+      'client'
+    ]
+  }
+});

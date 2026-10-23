@@ -1,34 +1,34 @@
-import { resolve } from 'pathe'
+import { resolve } from 'pathe';
 
 export default defineNuxtConfig({
   modules: [
-    '@nuxt/devtools-ui-kit',
+    '@nuxt/devtools-ui-kit'
   ],
 
   ssr: false,
 
   devtools: {
-    enabled: false,
+    enabled: false
   },
 
   app: {
-    baseURL: '/__my-module',
+    baseURL: '/__my-module'
   },
 
   compatibilityDate: '2024-08-21',
 
   nitro: {
     output: {
-      publicDir: resolve(__dirname, '../dist/client'),
-    },
+      publicDir: resolve(__dirname, '../dist/client')
+    }
   },
 
   vite: {
     server: {
       hmr: {
         // Instead of go through proxy, we directly connect real port of the client app
-        clientPort: +(process.env.PORT || 3300),
-      },
-    },
-  },
-})
+        clientPort: +(process.env.PORT || 3300)
+      }
+    }
+  }
+});

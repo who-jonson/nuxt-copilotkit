@@ -97,6 +97,8 @@ export default defineEventHandler((event) => {
 - `prefix: ''` default; `global: true` default is **load-bearing for GenUI** (name-string resolution from LLM only works on globally-registered components) — documented when disabling.
 - **Churn guard**: CI test diffs barrel composable exports + component registration list against installed `@copilotkit/vue` `index.d.ts`; fails with "update lists" on upstream adds/renames. Keeps the `^1.79.0` peer honest.
 
+
+> **Erratum (2026-10-23, Spike A):** the counts above are estimates. `@copilotkit/vue@1.79.1` exposes **21** v2 composables (17 hooks + 4 provider composables incl. `useCopilotKit`) and **30** component exports (28 UI + 2 providers). Upstream `CopilotKitKey` is a private Symbol, so the §4 degrade policy is the active autoWrap behavior and module-owned keys ship at `#copilotkit/keys`; `<CopilotKit>` is registered as a universal component so its slot server-renders (§4).
 ---
 
 ## 7. GenUI & HITL Nuxt helpers
