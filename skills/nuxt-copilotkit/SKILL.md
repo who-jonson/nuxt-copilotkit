@@ -22,7 +22,7 @@ pnpm add @copilotkit/vue
 Optionally install `@copilotkit/runtime` (required for the built-in route):
 
 ```bash
-pnpm add @copilotkit/runtime
+pnpm add @copilotkit/runtime @ag-ui/client
 ```
 
 Enable in `nuxt.config.ts`:
@@ -51,10 +51,11 @@ export default defineNuxtConfig({
       enabled: true,              // Register built-in route (default: true)
       path: '/api/_copilotkit',   // Route path (default: '/api/_copilotkit')
       url: undefined,             // External runtime URL (disables built-in route)
-      model: 'openai/gpt-4o'      // Model identifier (default: 'openai/gpt-4o')
+      model: 'openai/gpt-4o',     // Model identifier (default: 'openai/gpt-4o')
+      agents: undefined           // Remote AG-UI agents by id: { default: { url, headers? } } (replaces BuiltInAgent)
     },
     provider: {
-      autoWrap: true,             // Auto-wrap app in <CopilotKitProvider> (default: true)
+      autoWrap: true,             // Register the client plugin (module context + dev hint); you still wrap with <CopilotKit> (default: true)
       debug: false,               // Enable CopilotKit debug logging
       inspector: false            // Enable CopilotKit Inspector ('dev' | true | false)
     },
@@ -93,28 +94,7 @@ Client-side (public):
 
 ### Auto-wrap Mode (Default)
 
-The module automatically wraps your app in `<CopilotKitProvider>` with zero template changes:
-
-```ts
-// nuxt.config.ts (default behavior)
-export default defineNuxtConfig({
-  modules: ['nuxt-copilotkit']
-})
-```
-
-### Manual Wrapper
-
-Disable `provider.autoWrap` and use the `<CopilotKit>` component explicitly:
-
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  modules: ['nuxt-copilotkit'],
-  copilotkit: {
-    provider: { autoWrap: false }
-  }
-})
-```
+The upstream provider cannot be installed headlessly, so `autoWrap` only registers a client plugin (module context + a dev hint). Wrap your layout in `<CopilotKit>`; set `provider.autoWrap: false` to skip the plugin and hint:
 
 ```vue
 <!-- app.vue -->
@@ -129,31 +109,35 @@ export default defineNuxtConfig({
 
 ## Server Utilities
 
-Import from `#copilotkit/server`:
+Auto-imported in server code (also importable from `#copilotkit/server`):
 
 ```ts
-// server/api/custom-runtime.ts
-import { defineCopilotRuntime } from '#copilotkit/server'
-
-export default defineCopilotRuntime({
-  // CopilotKit runtime options
+// server/plugins/copilotkit.ts
+export default defineNitroPlugin((nitro) => {
+  nitro.hooks.hook('copilotkit:runtime', ({ agents }) => {
+    // Mutate in place; reassigning `agents` has no effect.
+    agents.research = createRemoteAgent({ url: 'http://localhost:8000/agent' })
+  })
 })
 ```
 
 **Available exports:**
-- `defineCopilotRuntime(options)` — Define a custom CopilotKit runtime handler
-- `getCopilotRuntime()` — Retrieve the configured runtime instance
+- `defineCopilotRuntime(factory)` — Register a factory `(event) => CopilotRuntime`; runs once, lazily
+- `getCopilotRuntime(event)` — Retrieve the (memoized) runtime instance
+- `createRemoteAgent({ url, headers?, description? })` — `HttpAgent` for any AG-UI backend (Google ADK, Claude Agent SDK, VoltAgent, LangGraph, A2A bridges); needs optional peer `@ag-ui/client`
+
+**Nitro hooks:** `copilotkit:request` (every request), `copilotkit:runtime` (once, with the agents registry).
 
 ## Client Composables & Components
 
-All upstream `@copilotkit/vue` exports are auto-imported via the `#copilotkit` alias:
+The upstream `@copilotkit/vue` **v2** composables (legacy v1 `useCopilotAction`/`useCopilotReadable`/`useCopilotChat` are intentionally excluded) are auto-imported and also importable from `#copilotkit`:
 
 ```ts
-// Auto-imported composables
-useCopilotAction(...)
-useCopilotReadable(...)
-useCopilotChat(...)
-useCopilotChatSuggestions(...)
+useAgent(...)
+useFrontendTool(...)
+useAgentContext(...)
+useSuggestions(...)
+useHumanInTheLoop(...)
 ```
 
 **Module-owned composables:**
@@ -161,23 +145,21 @@ useCopilotChatSuggestions(...)
 
 **Registered components (global by default):**
 - `<CopilotKit>` — Manual provider wrapper (when `autoWrap: false`)
-- `<CopilotSidebar>` — CopilotKit sidebar UI
-- `<CopilotPopup>` — CopilotKit popup UI
-- `<CopilotTextarea>` — CopilotKit textarea component
-
-(Additional components from `@copilotkit/vue` are registered based on `components.include` config.)
+- Upstream v2 components such as `<CopilotChat>`, `<CopilotSidebar>`, `<CopilotPopup>` (client-only; all 30 are registered unless `components.include` narrows them)
 
 ## GenUI & HITL Helpers
 
 The module provides composables for Generative UI and Human-in-the-Loop patterns:
 
 ```ts
-// Example: GenUI with useCopilotAction
-const { render } = useCopilotAction({
-  name: 'generateCard',
-  render: (props) => h('div', props.content)
-})
+// Render a tool call with a component (resolved by name when a string is passed)
+useCopilotGenUI({ name: 'generateCard', parameters: schema, render: 'ProductCard' })
+
+// Human-in-the-loop approval
+useCopilotHITL({ name: 'approveAction', parameters: schema, render: 'ApprovalCard' })
 ```
+
+Both are no-ops during SSR and take an optional `deps` array of watch sources.
 
 Refer to the [CopilotKit documentation](https://docs.copilotkit.ai) for detailed GenUI and HITL patterns.
 
@@ -198,7 +180,7 @@ Access via Nuxt DevTools → CopilotKit tab.
 If using the built-in runtime route, install the optional peer dependency:
 
 ```bash
-pnpm add @copilotkit/runtime
+pnpm add @copilotkit/runtime @ag-ui/client
 ```
 
 Or disable the built-in route and use an external runtime:

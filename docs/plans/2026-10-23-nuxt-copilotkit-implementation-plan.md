@@ -42,7 +42,7 @@ Server-rendered live agent state (D3) · `exclude` component filter (deferred, a
 | `pnpm-workspace.yaml` | Named catalogs `prod`/`dev`, `catalogMode: strict` — every dependency version goes through a catalog (memory decision 2026-10-23) |
 | `package.json` | `files: ["dist", "skills"]` (skill ships via npm), `prepare`: `nuxt-module-build build --stub && nuxt-module-build prepare && skills-npm -a 'claude,pi'` |
 | DevTools v4 migration guide (`devtools.nuxt.com/module/migration-v4`, applied 2026-10-23) | v4-native API for Phase 3 / P9: `onDevtoolsReady`, `ctx.docks.register`, `ctx.scope().rpc.register`, `getDevToolsRpcClient()` from `@vitejs/devtools-kit/client` (^0.7.6, new catalog dep), host channel `window.parent.__NUXT_DEVTOOLS_HOST__` |
-| Memory (2026-10-23 decisions) | Catalog discipline; mermaid-only diagrams; **no direct `tsconfig.json` edits** (Nuxt generates it); extensionless imports (no `.ts` specifiers); sandboxed bash cannot GPG-sign (`ssh-agent: Operation not permitted`) → `--no-gpg-sign` strategy; skills-npm semantics (`./skills/` = shipped source for consumers, symlinked into their agent dirs) |
+| Project conventions | Catalog discipline; mermaid-only diagrams; **no direct `tsconfig.json` edits** (Nuxt generates it); extensionless imports (no `.ts` specifiers); skills-npm semantics (`./skills/` = shipped source for consumers, symlinked into their agent dirs) |
 
 **Skills to invoke at execution time:** `copilotkit` (Spike A — upstream surface), `copilotkit-cli` (`npx copilotkit verify` before hand-debugging), `nuxt` (module patterns), `vitest` (test config), `writing-skills` (Phase 6 skill authoring), plus process skills `test-driven-development`, `systematic-debugging` (on any failure), `verification-before-completion` (before any gate is claimed green).
 
@@ -66,7 +66,7 @@ Server-rendered live agent state (D3) · `exclude` component filter (deferred, a
 | `src/runtime/server/utils/defineCopilotRuntime.ts` | Runtime construction util (memoized; server-auto-imported; `#copilotkit/server`) |
 | `src/devtools.ts` + `client/` | DevTools tab (id `nuxt-copilotkit`, route `/__nuxt-copilotkit`) |
 
-Additional files this plan introduces (not in §5): `skills/nuxt-copilotkit/SKILL.md` (+ optional `references/`), `documentation/README.md` (stub), `.pi/state/spikes/*.md` (spike evidence — gitignored process state, never committed), `vitest.config.ts` (root, `defineVitestConfig`).
+Additional files this plan introduces (not in §5): `skills/nuxt-copilotkit/SKILL.md` (+ optional `references/`), `documentation/README.md` (stub), local spike notes (spike evidence — never committed), `vitest.config.ts` (root, `defineVitestConfig`).
 
 ### ModuleOptions (ARCHITECTURE §6 — verbatim)
 
@@ -129,7 +129,6 @@ Playground = E2E criterion: chat vs `/api/_copilotkit` + mock-agent GenUI page (
 | `peerDependencies: catalog:` protocol support unverified in this repo | — | Phase 1 task verifies with `pnpm install --lockfile-only`; fallback recorded in-task |
 | `.nuxtrc` carries starter line `imports.autoImport=false` | file contents | Would block playground auto-import demos (#copilotkit barrel) — **Phase 1 hygiene item** with a verify step |
 | Repo is the **scaffold commit**: `src/module.ts` = `my-module`/`myModule` stub, sample `src/runtime/plugin.ts`, scaffold devtools client | file contents | Phase 1 renames/removes scaffold artifacts before feature work |
-| Local git `commit.gpgsign=true`; pi sandboxed bash cannot sign | memory + earlier session | Staging model: agents stage per task; **one final commit** attempted with `--no-gpg-sign`; on failure the exact command is handed to the user (2026-10-23 decision, option 3) |
 | `.gitignore` excludes `skills/` | file contents | **Conflicts with Phase 6** (authored skill source must be committed). Phase 6 removes that line — reasoning: the exclusion targeted *symlinked consumer* state; this repo is a skill *producer* (`files` includes `skills/`) |
 | `skills/` empty dir exists; `skills-npm@4.1.0` installed | tree + package | Phase 6 authors `skills/nuxt-copilotkit/SKILL.md`; README notes skills-npm is merging into the `skills` CLI (`npx skills experimental_sync`) — migration-watch note only |
 | Public-ready posture: repo `.npmrc` → public registry; zero internal references required; no authored-by commit trailers | memory decision 2026-10-23 | Rechecked in the Final Verification hygiene gate |
@@ -147,11 +146,10 @@ DevTools lands *before* GenUI/HITL (session constraint supersedes design §10 st
 
 ### Spike-first, evidence-driven
 
-Phase 0 resolves every `⟪SPK-A⟫` / `⟪SPK-B⟫` marker in Appendix A to exact upstream identifiers/versions before any build task starts. Findings are recorded in `.pi/state/spikes/` (Appendix B template; gitignored — spike notes are process state, not repo docs). If a spike finding contradicts the design doc → **stop and raise with the user** (design wins; plan/deviations need explicit approval).
+Phase 0 resolves every `⟪SPK-A⟫` / `⟪SPK-B⟫` marker in Appendix A to exact upstream identifiers/versions before any build task starts. Findings are recorded in local spike notes (Appendix B template; gitignored — spike notes are process state, not repo docs). If a spike finding contradicts the design doc → **stop and raise with the user** (design wins; plan/deviations need explicit approval).
 
 ### SDD execution protocol (user constraints, 2026-10-23)
 
-1. **Before any dispatch:** enumerate available sub-agents and models (`/subagents-models`) and get the model confirmed **per dispatch** by the user.
 2. Each task → a focused subagent with a **narrow file scope** (listed files only; they read nothing else without returning to ask) and a **self-review prompt** ("re-read each acceptance criterion in the task and verify it against your diff before reporting").
 3. **Parallelize only where file overlap is zero** (SDD rule). The parallelization map below is the authority; if reality diverges, return to sequential and note why.
 4. Sub-agent failure or ambiguity → report to the user; never improvise past it.
@@ -171,7 +169,7 @@ Phase 0 resolves every `⟪SPK-A⟫` / `⟪SPK-B⟫` marker in Appendix A to exa
 ### Staging & commit strategy (user decision, option 3)
 
 - Subagents **stage** their changes (`git add <files>`) at each task's end; **no commits** during phases.
-- At Final Verification, the orchestrator runs **one** commit: `git commit --no-gpg-sign -m "<message>"` (no authored-by trailers ever). If signing/commit fails in the sandbox, print the exact command for the user to run in their own terminal and proceed with review.
+- At Final Verification, a **single** commit is made with a conventional message (no authored-by trailers).
 
 ### Verification-first
 
@@ -211,18 +209,18 @@ flowchart LR
 ### Phase 0 — Spikes (evidence-first)
 
 - **Objective:** convert the design doc's §12 open questions and every Appendix-A marker into verified facts before the build.
-- **Evidence:** two spike notes under `.pi/state/spikes/` (Appendix B templates, gitignored — never committed), each ending in a go/adjust recommendation.
+- **Evidence:** two local spike notes (Appendix B templates; kept out of version control), each ending in a go/adjust recommendation.
 
 **0.1 — Spike A: `@copilotkit/vue` boundary probe** *(invoke the `copilotkit` skill; run `npx copilotkit verify` first if a runtime is briefly stood up)*
 
-- Files: `.pi/state/spikes/2026-10-23-spike-a-vue-boundary.md` (new, gitignored); may briefly touch `playground/` + `pnpm-workspace.yaml`/`package.json` to install — catalog discipline applies.
+- Files: local spike note A (not committed); may briefly touch `playground/` + `pnpm-workspace.yaml`/`package.json` to install — catalog discipline applies.
 - Steps: install `@copilotkit/vue` (prod catalog, floor `^1.79.0`); read its `package.json` exports + `index.d.ts`; record: (a) headless context-install surface (plugin export? injection key? `CopilotKitProvider` props incl. `runtimeUrl`/`debug`/`inspector`), (b) the exact **13 composable** export names, (c) the exact **~20 component** export names (+ named-vs-default export shape for `addComponent`), (d) `styles.css` subpath, (e) server-import safety (import chain under Node SSR), (f) `useRenderTool` + `useHumanInTheLoop` signatures → the §7 wrapper seam.
 - Acceptance: Appendix-B table filled for every `⟪SPK-A⟫` marker; SSR-safe import statement proven (or flagged as autoWrap-degrade risk per §4 policy).
 - **Result (2026-10-23, reviewer-audited + orchestrator-verified; note v2):** provider-only (no plugin; `CopilotKitKey` private) ⇒ §4 degrade active; **21** v2 composables (17 hooks + 4 provider incl. `useCopilotKit`); **30** component exports (28 UI + 2 providers; 7 internal SFCs unexported); `@copilotkit/vue/styles.css` ✓; SSR import ✓. Evidence: `.pi/state/spikes/2026-10-23-spike-a-vue-boundary.md`.
 
 **0.2 — Spike B: Nitro handler ↔ `CopilotRuntime` SSE proof**
 
-- Files: `.pi/state/spikes/2026-10-23-spike-b-nitro-sse.md` (new, gitignored); owns `pnpm-workspace.yaml` + `package.json` catalog/devDep edits; minimal probe route in `playground/`.
+- Files: local spike note B (not committed); owns `pnpm-workspace.yaml` + `package.json` catalog/devDep edits; minimal probe route in `playground/`.
 - Steps: add `@copilotkit/runtime` + `h3 ^1.15.11` to prod catalog (this task is the single owner of manifest edits in Phase 0); construct `CopilotRuntime` + `BuiltInAgent({ model: 'openai/gpt-4o' })` (settles §12 Q4); mount `createCopilotNodeListener({ runtime })` via `fromNodeMiddleware` in a Nuxt route; `curl -N` a POST and record the raw SSE stream shape (settles §12 Q1 listener subpaths, observed empirically); probe `GET /api/_copilotkit` → record health semantics (settles §12 Q5); probe whether `GET .../info` exists (devtools health panel input, §8).
 - Acceptance: SSE round-trip demonstrated (paste of actual output in the note); exact `@copilotkit/runtime` version + `/v2/node` import string recorded; `h3` import string recorded; go/adjust on the P3 pattern.
 
@@ -230,7 +228,7 @@ flowchart LR
 
 - **Tests:** none (spikes only).
 - **Verification:** both notes exist; Appendix-B marker table 100% resolved; user signs off go/adjust.
-- **Commit:** stage manifest changes only — spike notes stay in gitignored `.pi/state/spikes/`, never staged (no commit — final commit only).
+- **Commit:** stage manifest changes only — spike notes stay local, never staged (no commit — final commit only).
 
 **Gate G0** = user-approved go/adjust + resolved marker table.
 
@@ -397,8 +395,7 @@ flowchart LR
 4. **§4 hydration contract checklist** — identical SSR vnode tree; degrade hint policy implemented; `autoWrap:false` path documented in phase report.
 5. **§12 ledger status** — Q1–Q5 each marked answered-by (spike note / task) or consciously deferred.
 6. **Public hygiene** — no `authored-by`/co-authored trailers; zero internal references (`rg -i` sweep for internal hosts/tooling names across committed files); `.npmrc` still points at the public registry.
-7. **Single final commit** — `git add -A && git commit --no-gpg-sign -m "feat: nuxt-copilotkit v1 — layered API, devtools tab, GenUI/HITL helpers, agent skill"` (message finalized at commit time). If the sandbox cannot commit, print the exact command for the user's terminal and stop there.
-8. Record the session handoff per the user's handoff convention (template `~/.pi/agent/prompts/session-handoff.md`).
+7. **Single final commit** — conventional message, e.g. `feat: nuxt-copilotkit v1 — layered API, devtools tab, GenUI/HITL helpers, agent skill` (finalized at commit time).
 
 ---
 

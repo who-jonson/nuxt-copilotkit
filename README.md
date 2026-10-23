@@ -7,7 +7,6 @@
 
 SSR-safe CopilotKit integration for Nuxt 4 — built-in Nitro runtime route, GenUI/HITL helpers, and a devtools tab.
 
-- [✨ &nbsp;Release Notes](/CHANGELOG.md)
 - [📖 &nbsp;Architecture](/ARCHITECTURE.md)
 - [📋 &nbsp;Implementation Plan](/docs/plans/2026-10-23-nuxt-copilotkit-implementation-plan.md)
 
@@ -36,10 +35,10 @@ pnpm add -D nuxt-copilotkit
 pnpm add @copilotkit/vue
 ```
 
-3. Optionally install `@copilotkit/runtime` (only needed when using the built-in Nitro route):
+3. Optionally install `@copilotkit/runtime` and `@ag-ui/client` (only needed when using the built-in Nitro route):
 
 ```bash
-pnpm add @copilotkit/runtime
+pnpm add @copilotkit/runtime @ag-ui/client
 ```
 
 4. Add `nuxt-copilotkit` to the `modules` section of `nuxt.config.ts`:
@@ -64,27 +63,33 @@ Set your provider API key:
 NUXT_COPILOTKIT_OPENAI_API_KEY=sk-...
 ```
 
-The module automatically wraps your app in `<CopilotKitProvider>` with the built-in runtime route (`/api/_copilotkit`). Use CopilotKit composables anywhere:
+The module registers the built-in runtime route (`/api/_copilotkit`), all upstream `@copilotkit/vue` components and the `#copilotkit` composables. Wrap your layout in the SSR-safe `<CopilotKit>` component (the upstream provider cannot be installed headlessly), then use components and composables anywhere:
 
 ```vue
-<script setup lang="ts">
-const { appendMessage, messages } = useCopilotChat()
+<!-- app.vue -->
+<template>
+  <CopilotKit>
+    <NuxtPage />
+  </CopilotKit>
+</template>
+```
 
-useCopilotAction({
+```vue
+<!-- pages/index.vue -->
+<script setup lang="ts">
+useFrontendTool({
   name: 'sayHello',
   description: 'Say hello to the user',
-  handler: async ({ name }) => {
-    return `Hello, ${name}!`
-  }
+  handler: async ({ name }: { name: string }) => `Hello, ${name}!`
 })
 </script>
 
 <template>
-  <div>
-    <CopilotSidebar />
-  </div>
+  <CopilotSidebar />
 </template>
 ```
+
+> `<CopilotKit>` renders its slot on the server and mounts the live provider after hydration, so the wrapped subtree is remounted once on the client. Keep heavy page state out of the wrapper's direct children if that matters.
 
 ### Custom Configuration
 
@@ -109,24 +114,48 @@ export default defineNuxtConfig({
 })
 ```
 
-### Server Runtime Utilities
+### Connecting an agent framework (remote AG-UI agents)
 
-Define custom runtime handlers with `defineCopilotRuntime`:
+Any backend that speaks the [AG-UI](https://docs.copilotkit.ai) HTTP protocol (Google ADK, Claude Agent SDK, VoltAgent, LangGraph, A2A bridges, ...) can be registered by URL. Remote agents replace the default `BuiltInAgent`, so no model API key is needed in Nuxt:
 
 ```ts
-// server/api/custom-runtime.ts
-import { defineCopilotRuntime } from '#copilotkit/server'
-
-export default defineCopilotRuntime({
-  // Custom CopilotKit runtime configuration
+// nuxt.config.ts
+export default defineNuxtConfig({
+  copilotkit: {
+    runtime: {
+      agents: {
+        default: { url: 'http://localhost:8000/agent', headers: { Authorization: 'Bearer ...' } }
+      }
+    }
+  }
 })
 ```
+
+This needs the optional peer `@ag-ui/client` (installed alongside `@copilotkit/runtime`). Select a non-`default` agent in the UI with the component's `agent-id` prop.
+
+### Server Runtime Utilities
+
+For dynamic setups, customize the runtime from a server plugin or the Nitro hook; the factory runs once, lazily, on the first request:
+
+```ts
+// server/plugins/copilotkit.ts
+export default defineNitroPlugin((nitro) => {
+  nitro.hooks.hook('copilotkit:runtime', ({ agents }) => {
+    // Mutate `agents` in place; reassigning `agents` has no effect.
+    agents.research = createRemoteAgent({ url: process.env.RESEARCH_AGENT_URL! })
+  })
+})
+```
+
+Or take full control with `defineCopilotRuntime(factory)` (`#copilotkit/server`, also auto-imported in server code), which must return a `CopilotRuntime`.
+
+Server utilities: `defineCopilotRuntime`, `getCopilotRuntime`, `createRemoteAgent`.
 
 ### SSR Safety
 
 The `<CopilotKit>` wrapper renders its slot on the server (no browser code runs during SSR). All CopilotKit composables are client-only and safe to use with SSR.
 
-For manual provider control, disable auto-wrap:
+`provider.autoWrap` (default `true`) registers the module's client plugin, which provides module context and prints a one-line dev hint. Set it to `false` to skip the plugin and the hint:
 
 ```ts
 // nuxt.config.ts
