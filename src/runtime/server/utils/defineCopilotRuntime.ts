@@ -6,7 +6,6 @@ import type { H3Event } from 'h3';
 import { useRuntimeConfig, useNitroApp } from 'nitropack/runtime';
 import { DEFAULT_AGENT_ID } from '@copilotkit/shared';
 import { BuiltInAgent, CopilotRuntime, type BasicAgent } from '@copilotkit/runtime/v2';
-import type {} from '../hooks';
 
 type CopilotRuntimeFactory = (event: H3Event) => CopilotRuntime | Promise<CopilotRuntime>;
 
