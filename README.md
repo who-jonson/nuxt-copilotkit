@@ -54,6 +54,98 @@ export default defineNuxtConfig({
 
 That's it! You can now use nuxt-copilotkit in your Nuxt app ✨
 
+## Usage
+
+### Basic Setup
+
+Set your provider API key:
+
+```bash
+NUXT_COPILOTKIT_OPENAI_API_KEY=sk-...
+```
+
+The module automatically wraps your app in `<CopilotKitProvider>` with the built-in runtime route (`/api/_copilotkit`). Use CopilotKit composables anywhere:
+
+```vue
+<script setup lang="ts">
+const { appendMessage, messages } = useCopilotChat()
+
+useCopilotAction({
+  name: 'sayHello',
+  description: 'Say hello to the user',
+  handler: async ({ name }) => {
+    return `Hello, ${name}!`
+  }
+})
+</script>
+
+<template>
+  <div>
+    <CopilotSidebar />
+  </div>
+</template>
+```
+
+### Custom Configuration
+
+Configure via the `copilotkit` key in `nuxt.config.ts`:
+
+```ts
+export default defineNuxtConfig({
+  modules: ['nuxt-copilotkit'],
+  copilotkit: {
+    runtime: {
+      path: '/api/copilot',      // Custom route path
+      model: 'openai/gpt-4o'      // Model identifier
+    },
+    provider: {
+      debug: true,                 // Enable debug logging
+      inspector: 'dev'             // Show CopilotKit Inspector in dev
+    },
+    components: {
+      global: true                 // Register components globally (required for GenUI)
+    }
+  }
+})
+```
+
+### Server Runtime Utilities
+
+Define custom runtime handlers with `defineCopilotRuntime`:
+
+```ts
+// server/api/custom-runtime.ts
+import { defineCopilotRuntime } from '#copilotkit/server'
+
+export default defineCopilotRuntime({
+  // Custom CopilotKit runtime configuration
+})
+```
+
+### SSR Safety
+
+The `<CopilotKit>` wrapper renders its slot on the server (no browser code runs during SSR). All CopilotKit composables are client-only and safe to use with SSR.
+
+For manual provider control, disable auto-wrap:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  copilotkit: {
+    provider: { autoWrap: false }
+  }
+})
+```
+
+```vue
+<!-- app.vue -->
+<template>
+  <CopilotKit>
+    <NuxtPage />
+  </CopilotKit>
+</template>
+```
+
 ## Development
 
 ```bash
