@@ -1,0 +1,70 @@
+{
+  "name": "nuxt-copilotkit",
+  "version": "0.0.1",
+  "description": "My new Nuxt module",
+  "license": "MIT",
+  "type": "module",
+  "repository": "who-jonson/nuxt-copilotkit",
+  "homepage": "https://github.com/who-jonson/nuxt-copilotkit",
+  "bugs": {
+    "url": "https://github.com/who-jonson/nuxt-copilotkit/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
+    }
+  },
+  "main": "./dist/module.mjs",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.mts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "skills"
+  ],
+  "scripts": {
+    "prepack": "nuxt-module-build && npm run client:build",
+    "client:build": "nuxi generate client",
+    "client:dev": "nuxi dev client --port 3300",
+    "dev": "npm run play:dev",
+    "dev:prepare": "nuxt-module-build --stub && nuxi prepare client",
+    "prepare": "nuxi prepare client && skills-npm -a 'claude,pi'",
+    "play:dev": "nuxi dev playground",
+    "play:prod": "npm run prepack && nuxi dev playground",
+    "release": "npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@nuxt/devtools-kit": "catalog:prod",
+    "@nuxt/kit": "catalog:prod",
+    "sirv": "catalog:prod"
+  },
+  "devDependencies": {
+    "@iconify-json/carbon": "catalog:dev",
+    "@nuxt/content": "catalog:dev",
+    "@nuxt/devtools": "catalog:dev",
+    "@nuxt/devtools-ui-kit": "catalog:dev",
+    "@nuxt/eslint": "catalog:dev",
+    "@nuxt/eslint-config": "catalog:dev",
+    "@nuxt/module-builder": "catalog:dev",
+    "@nuxt/schema": "catalog:dev",
+    "@nuxt/test-utils": "catalog:dev",
+    "@types/node": "catalog:dev",
+    "@typescript/native": "catalog:dev",
+    "changelogen": "catalog:dev",
+    "eslint": "catalog:dev",
+    "nuxt": "catalog:dev",
+    "skills-npm": "catalog:dev",
+    "typescript": "catalog:dev",
+    "vitest": "catalog:dev"
+  },
+  "packageManager": "pnpm@12.15.0"
+}

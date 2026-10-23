@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "name": "nuxt-copilotkit-client",
+  "type": "module"
+}
