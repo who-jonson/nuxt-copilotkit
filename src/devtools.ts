@@ -4,7 +4,7 @@
  */
 import { existsSync } from 'node:fs';
 import type { Nuxt } from 'nuxt/schema';
-import type { Resolver } from '@nuxt/kit';
+import { extendViteConfig, type Resolver } from '@nuxt/kit';
 
 const DEVTOOLS_UI_ROUTE = '/__nuxt-copilotkit';
 const DEVTOOLS_UI_LOCAL_PORT = 3300;
@@ -29,7 +29,7 @@ export function setupDevToolsUI(nuxt: Nuxt, resolver: Resolver) {
   }
   // In local development, start a separate Nuxt Server and proxy to serve the client
   else {
-    nuxt.hook('vite:extendConfig', (config) => {
+    extendViteConfig((config) => {
       config.server = config.server || {};
       config.server.proxy = config.server.proxy || {};
       config.server.proxy[DEVTOOLS_UI_ROUTE] = {

@@ -2,12 +2,12 @@
  * nuxt-copilotkit module entrypoint: options wiring, registration, aliases,
  * and Nuxt DevTools hook-up.
  */
-import { createResolver, defineNuxtModule } from '@nuxt/kit';
+import { createResolver, defineNuxtModule, updateRuntimeConfig } from '@nuxt/kit';
 import defu from 'defu';
 import { setupDevToolsUI } from './devtools';
-import { defaults, type ModuleOptions } from './options';
+import { defaults, type ModuleOptions, type ModulePublicRuntimeConfig, type ModuleRuntimeConfig } from './options';
 
-export type { ModuleOptions } from './options';
+export type { ModuleOptions, ModulePublicRuntimeConfig, ModuleRuntimeConfig } from './options';
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
@@ -48,17 +48,20 @@ export default defineNuxtModule<ModuleOptions>({
     // One-way options -> runtimeConfig (private)
     // defu(a, b) gives priority to a, so user runtimeConfig must come first to win
     // empty string defaults allow NUXT_* env overrides
-    nuxt.options.runtimeConfig.copilotkit = defu(
-      nuxt.options.runtimeConfig.copilotkit,
-      { model: runtime !== false ? (runtime.model ?? 'openai/gpt-4o') : 'openai/gpt-4o', openaiApiKey: '', anthropicApiKey: '' }
-    );
-
-    // Public runtimeConfig (client-visible)
-    // defu(a, b) gives priority to a, so user runtimeConfig must come first to win
-    nuxt.options.runtimeConfig.public.copilotkit = defu(
-      nuxt.options.runtimeConfig.public.copilotkit,
-      { runtimeUrl, debug: options.provider.debug ?? false }
-    );
+    updateRuntimeConfig({
+      copilotkit: defu(
+        nuxt.options.runtimeConfig.copilotkit || {} as ModuleRuntimeConfig,
+        { model: runtime !== false ? (runtime.model ?? 'openai/gpt-4o') : 'openai/gpt-4o', openaiApiKey: '', anthropicApiKey: '' }
+      ),
+      // Public runtimeConfig (client-visible)
+      // defu(a, b) gives priority to a, so user runtimeConfig must come first to win
+      public: {
+        copilotkit: defu(
+          nuxt.options.runtimeConfig.public.copilotkit || {} as ModulePublicRuntimeConfig,
+          { runtimeUrl, debug: options.provider.debug ?? false }
+        )
+      }
+    });
 
     // Register aliases for #copilotkit and #copilotkit/server
     // Targets are created by sibling tickets; alias registration itself won't break build/test
