@@ -10,6 +10,8 @@
 export interface ModuleOptions {
   /**
    * Server runtime wiring. `false` disables all server-side registrations.
+   * When `false`, `public.runtimeUrl` is empty and must be set externally (e.g., via `NUXT_PUBLIC_COPILOTKIT_RUNTIME_URL`
+   * or `runtimeConfig.public.copilotkit.runtimeUrl` in `nuxt.config.ts`) since no built-in route exists.
    */
   runtime: false | {
     /** Register the built-in CopilotKit runtime route. @default true */
@@ -76,14 +78,31 @@ export const defaults: ModuleOptions = {
 
 declare module 'nuxt/schema' {
   interface RuntimeConfig {
-    /** Server-only CopilotKit configuration (one-way: module options → runtimeConfig). */
+    /**
+     * Server-only CopilotKit configuration (one-way: module options → runtimeConfig).
+     * Override via environment variables:
+     * - `NUXT_COPILOTKIT_MODEL` — Model identifier (default: 'openai/gpt-4o')
+     * - `NUXT_COPILOTKIT_OPENAI_API_KEY` — OpenAI API key (default: '')
+     * - `NUXT_COPILOTKIT_ANTHROPIC_API_KEY` — Anthropic API key (default: '')
+     *
+     * Note: Empty string ('') means unset — Nitro only applies env overrides to keys that exist.
+     */
     copilotkit: {
       /** Model identifier forwarded to the CopilotKit runtime. @default 'openai/gpt-4o' */
       model: string;
+      /** OpenAI API key for the built-in runtime. @default '' (unset) */
+      openaiApiKey: string;
+      /** Anthropic API key for the built-in runtime. @default '' (unset) */
+      anthropicApiKey: string;
     };
   }
   interface PublicRuntimeConfig {
-    /** Client-visible CopilotKit configuration. */
+    /**
+     * Client-visible CopilotKit configuration.
+     * Override via environment variables:
+     * - `NUXT_PUBLIC_COPILOTKIT_RUNTIME_URL` — Resolved runtime endpoint URL
+     * - `NUXT_PUBLIC_COPILOTKIT_DEBUG` — Upstream debug flag
+     */
     copilotkit: {
       /** Resolved runtime endpoint URL; single source of truth shared by route registration and the client provider. */
       runtimeUrl: string;
