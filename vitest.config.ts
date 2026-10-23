@@ -1,5 +1,6 @@
 // Root Vitest config for nuxt-copilotkit — owns the design §9 test matrix via defineVitestConfig from @nuxt/test-utils/config.
 import { defineVitestConfig } from '@nuxt/test-utils/config';
+import { configDefaults } from 'vitest/config';
 
 /**
  * Design §9 test matrix owned by this config:
@@ -21,6 +22,8 @@ import { defineVitestConfig } from '@nuxt/test-utils/config';
  */
 export default defineVitestConfig({
   test: {
-    environment: 'node'
+    environment: 'node',
+    // Keep sibling git worktrees and the pnpm store out of test discovery.
+    exclude: [...configDefaults.exclude, '.pi/**', '.pnpm-store/**']
   }
 });

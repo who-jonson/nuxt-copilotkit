@@ -43,8 +43,11 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
+    "@copilotkit/shared": "catalog:prod",
     "@nuxt/devtools-kit": "catalog:prod",
     "@nuxt/kit": "catalog:prod",
+    "defu": "catalog:prod",
+    "h3": "catalog:prod",
     "sirv": "catalog:prod"
   },
   "peerDependencies": {

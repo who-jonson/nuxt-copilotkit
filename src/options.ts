@@ -109,3 +109,11 @@ export interface ModulePublicRuntimeConfig {
     debug?: boolean;
   };
 }
+
+// Augment Nuxt's RuntimeConfig types
+declare module '@nuxt/schema' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface RuntimeConfig extends ModuleRuntimeConfig {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface PublicRuntimeConfig extends ModulePublicRuntimeConfig {}
+}
