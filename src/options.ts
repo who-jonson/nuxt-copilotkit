@@ -7,6 +7,19 @@
  * Configuration for the nuxt-copilotkit module, consumed via the `copilotkit`
  * key in `nuxt.config`.
  */
+/**
+ * A remote agent exposed over the AG-UI HTTP protocol (e.g. a Google ADK, Claude Agent SDK,
+ * VoltAgent, LangGraph or A2A-bridged service). The runtime proxies requests to it via `HttpAgent`.
+ */
+export interface RemoteAgentConfig {
+  /** AG-UI endpoint of the remote agent. */
+  url: string;
+  /** Extra headers sent on every request (e.g. `Authorization`). Stored in private runtimeConfig. */
+  headers?: Record<string, string>;
+  /** Human-readable description surfaced to the runtime. */
+  description?: string;
+}
+
 export interface ModuleOptions {
   /**
    * Server runtime wiring. `false` disables all server-side registrations.
@@ -22,6 +35,12 @@ export interface ModuleOptions {
     url?: string;
     /** Model identifier used by the built-in runtime. @default 'openai/gpt-4o' */
     model?: string;
+    /**
+     * Remote AG-UI agents keyed by agent id. When non-empty they replace the default `BuiltInAgent`
+     * (register the id the client uses, `default` unless a component sets `agentId`).
+     * For dynamic agents use `defineCopilotRuntime` or the `copilotkit:runtime` hook.
+     */
+    agents?: Record<string, RemoteAgentConfig>;
   };
   /**
    * Client-side CopilotKit provider configuration.
@@ -93,6 +112,8 @@ export interface ModuleRuntimeConfig {
     openaiApiKey: string;
     /** Anthropic API key for the built-in runtime. @default '' (unset) */
     anthropicApiKey: string;
+    /** Remote AG-UI agents mirrored from `runtime.agents`. @default {} */
+    agents: Record<string, RemoteAgentConfig>;
   };
 }
 export interface ModulePublicRuntimeConfig {

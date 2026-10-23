@@ -8,17 +8,20 @@ import { useNitroApp } from 'nitropack/runtime';
 import { createCopilotNodeListener } from '@copilotkit/runtime/v2/node';
 import { getCopilotRuntime } from '../utils/defineCopilotRuntime';
 
-let handler: ReturnType<typeof fromNodeMiddleware> | null = null;
+// Memoize the promise (not the result) so concurrent first requests share one initialization.
+let handlerPromise: Promise<ReturnType<typeof fromNodeMiddleware>> | null = null;
 
 export default defineEventHandler(async (event: H3Event) => {
   // Fire the copilotkit:request hook on each request
   await useNitroApp().hooks.callHook('copilotkit:request', event);
 
   // Lazy-initialize the handler on first request
-  if (!handler) {
-    const runtime = await getCopilotRuntime(event);
-    handler = fromNodeMiddleware(createCopilotNodeListener({ runtime }));
-  }
+  handlerPromise ??= getCopilotRuntime(event)
+    .then(runtime => fromNodeMiddleware(createCopilotNodeListener({ runtime })))
+    .catch((error) => {
+      handlerPromise = null; // allow retry after a failed init
+      throw error;
+    });
 
-  return handler(event);
+  return (await handlerPromise)(event);
 });

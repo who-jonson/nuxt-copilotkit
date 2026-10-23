@@ -51,7 +51,12 @@ export default defineNuxtModule<ModuleOptions>({
     updateRuntimeConfig({
       copilotkit: defu(
         nuxt.options.runtimeConfig.copilotkit || {} as ModuleRuntimeConfig,
-        { model: runtime !== false ? (runtime.model ?? 'openai/gpt-4o') : 'openai/gpt-4o', openaiApiKey: '', anthropicApiKey: '' }
+        {
+          model: runtime !== false ? (runtime.model ?? 'openai/gpt-4o') : 'openai/gpt-4o',
+          openaiApiKey: '',
+          anthropicApiKey: '',
+          agents: runtime !== false ? (runtime.agents ?? {}) : {}
+        }
       ),
       // Public runtimeConfig (client-visible)
       // defu(a, b) gives priority to a, so user runtimeConfig must come first to win
@@ -84,7 +89,7 @@ export default defineNuxtModule<ModuleOptions>({
       if (!await tryResolveModule('@copilotkit/runtime', nuxt.options.rootDir)) {
         logger.warn(
           'Built-in CopilotKit runtime route is enabled, but @copilotkit/runtime is not installed.\n'
-          + 'Install it with: pnpm add -D @copilotkit/runtime'
+          + 'Install it with: pnpm add @copilotkit/runtime @ag-ui/client'
         );
       }
 
@@ -106,6 +111,9 @@ export default defineNuxtModule<ModuleOptions>({
     }, {
       from: '#copilotkit/server',
       name: 'getCopilotRuntime'
+    }, {
+      from: '#copilotkit/server',
+      name: 'createRemoteAgent'
     }]);
 
     // (c) Component and import registration (2.9)
@@ -216,23 +224,28 @@ export default defineNuxtModule<ModuleOptions>({
     if (options.devtools)
       setupDevToolsUI(nuxt, resolver);
 
+    // Only reference @ag-ui/client types when the runtime peers are expected; external-runtime/`runtime: false`
+    // consumers may not have them installed.
+    const usesBuiltInRuntime = runtimeUrl !== '' && runtime !== false && !runtime.url;
+    const agentImport = usesBuiltInRuntime ? 'import type { AbstractAgent } from \'@ag-ui/client\';' : '';
+    const agentType = usesBuiltInRuntime ? 'AbstractAgent' : 'unknown';
     addTypeTemplate({
       filename: 'modules/nuxt-copilotkit.d.ts',
-      getContents: () => `// auto-created ny nuxt-copilotkit
+      getContents: () => `// auto-created by nuxt-copilotkit
 /**
  * Nitropack runtime hooks augmentation for nuxt-copilotkit vNext seams.
  * These hooks are callable with zero listeners and provide future extension points.
  */
 import type { H3Event } from 'h3';
-import type { BuiltInAgent, BasicAgent } from '@copilotkit/runtime/v2';
+${agentImport}
 
 declare module 'nitropack' {
   interface NitroRuntimeHooks {
     /**
      * Called once during runtime initialization with the agents registry.
-     * Allows customization of the agents before first request.
+     * Mutate ctx.agents in place (add, replace or delete entries); reassigning the property has no effect.
      */
-    'copilotkit:runtime': (ctx: { event: H3Event; agents: Record<string, BuiltInAgent | BasicAgent> }) => void | Promise<void>;
+    'copilotkit:runtime': (ctx: { event: H3Event; agents: Record<string, ${agentType}> }) => void | Promise<void>;
 
     /**
      * Called on each incoming request to the CopilotKit endpoint.

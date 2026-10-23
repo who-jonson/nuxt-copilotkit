@@ -5,6 +5,7 @@ allowBuilds:
 
 catalogs:
   prod:
+    '@ag-ui/client': ^1.0.2
     '@copilotkit/runtime': ^1.79.1
     '@copilotkit/shared': ^1.79.1
     '@copilotkit/vue': ^1.79.0

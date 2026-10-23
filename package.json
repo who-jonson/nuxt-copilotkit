@@ -51,15 +51,20 @@
     "sirv": "catalog:prod"
   },
   "peerDependencies": {
+    "@ag-ui/client": "catalog:prod",
     "@copilotkit/runtime": "catalog:prod",
     "@copilotkit/vue": "catalog:prod"
   },
   "peerDependenciesMeta": {
+    "@ag-ui/client": {
+      "optional": true
+    },
     "@copilotkit/runtime": {
       "optional": true
     }
   },
   "devDependencies": {
+    "@ag-ui/client": "catalog:prod",
     "@copilotkit/runtime": "catalog:prod",
     "@copilotkit/vue": "catalog:prod",
     "@golar/vue": "catalog:dev",
