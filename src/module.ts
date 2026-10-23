@@ -2,7 +2,7 @@
  * nuxt-copilotkit module entrypoint: options wiring, registration, aliases,
  * and Nuxt DevTools hook-up.
  */
-import { addComponent, addImportsSources, addPlugin, addServerHandler, addServerImports, createResolver, defineNuxtModule, updateRuntimeConfig, useLogger, addTypeTemplate } from '@nuxt/kit';
+import { addComponent, addImportsSources, addPlugin, addServerHandler, addServerImports, createResolver, defineNuxtModule, updateRuntimeConfig, useLogger, addTypeTemplate, tryResolveModule } from '@nuxt/kit';
 import defu from 'defu';
 import { setupDevToolsUI } from './devtools';
 import { defaults, type ModuleOptions, type ModulePublicRuntimeConfig, type ModuleRuntimeConfig } from './options';
@@ -19,7 +19,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   // Default configuration options of the Nuxt module
   defaults,
-  setup(options, nuxt) {
+  async setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
 
     // Resolve runtimeUrl from ONE source per ARCHITECTURE §2:
@@ -81,10 +81,7 @@ export default defineNuxtModule<ModuleOptions>({
     // (a) Built-in route registration (runtimeUrl non-empty and no runtime.url)
     if (runtimeUrl && runtime !== false && !runtime.url) {
       // Ensure @copilotkit/runtime is available when built-in route is enabled
-      try {
-        resolver.resolve('@copilotkit/runtime');
-      }
-      catch {
+      if (!await tryResolveModule('@copilotkit/runtime', nuxt.options.rootDir)) {
         logger.warn(
           'Built-in CopilotKit runtime route is enabled, but @copilotkit/runtime is not installed.\n'
           + 'Install it with: pnpm add -D @copilotkit/runtime'
@@ -148,10 +145,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     if (options.components !== false) {
       // Ensure @copilotkit/vue is available
-      try {
-        resolver.resolve('@copilotkit/vue');
-      }
-      catch {
+      if (!await tryResolveModule('@copilotkit/vue', nuxt.options.rootDir)) {
         logger.warn(
           '@copilotkit/vue is not installed. Components will not be registered.\n'
           + 'Install it with: pnpm add @copilotkit/vue'
@@ -189,9 +183,15 @@ export default defineNuxtModule<ModuleOptions>({
       const importsPrefix = options.imports.prefix ?? '';
       const importsIncludeSet = options.imports.include ? new Set(options.imports.include) : null;
 
-      // Base composables list (will be populated by sibling BARREL ticket)
-      // For now, register the import source with an empty array - BARREL will populate
-      const composables: string[] = [];
+      // Value exports of the #copilotkit barrel (src/runtime/copilotkit/index.ts); kept in sync by test/upstream-drift.test.ts
+      const composables: string[] = [
+        'useAgent', 'useAgentContext', 'useAttachments', 'useCapabilities', 'useComponent',
+        'useConfigureSuggestions', 'useDefaultRenderTool', 'useFrontendTool', 'useHumanInTheLoop',
+        'useInterrupt', 'useKatexStyles', 'useKeyboardHeight', 'useRenderActivityMessage',
+        'useRenderCustomMessages', 'useRenderTool', 'useSuggestions', 'useThreads',
+        'useCopilotKit', 'useCopilotChatConfiguration', 'useLicenseContext', 'useSandboxFunctions',
+        'useNuxtCopilotKit', 'useCopilotGenUI', 'useCopilotHITL'
+      ];
 
       const filteredComposables = importsIncludeSet
         ? composables.filter(name => importsIncludeSet.has(name))
