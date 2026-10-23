@@ -41,5 +41,19 @@ export default defineNuxtConfig({
 
   compatibilityDate: 'latest',
 
-  copilotkit: {}
+  copilotkit: {
+    // Runtime endpoint points to our built-in route handler
+    runtime: {
+      url: '/api/_copilotkit'
+    },
+    provider: {
+      // Enable debug logging in development
+      debug: true
+    },
+    // Components and imports are auto-registered by default
+    components: {
+      global: true
+    },
+    imports: {}
+  }
 });
