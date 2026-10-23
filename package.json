@@ -60,6 +60,7 @@
   "devDependencies": {
     "@copilotkit/runtime": "catalog:prod",
     "@copilotkit/vue": "catalog:prod",
+    "@golar/vue": "catalog:dev",
     "@iconify-json/carbon": "catalog:dev",
     "@nuxt/content": "catalog:dev",
     "@nuxt/devtools": "catalog:dev",
