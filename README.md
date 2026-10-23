@@ -1,93 +1,95 @@
-<!--
-Get your module up and running quickly.
-
-Find and replace all on all files (CMD+SHIFT+F):
-- Name: My Module
-- Package name: my-module
-- Description: My new Nuxt module
--->
-
-# My Module
+# nuxt-copilotkit
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 
-My new Nuxt module integrated with the [Nuxt Devtools](https://github.com/nuxt/devtools).
+SSR-safe CopilotKit integration for Nuxt 4 — built-in Nitro runtime route, GenUI/HITL helpers, and a devtools tab.
 
 - [✨ &nbsp;Release Notes](/CHANGELOG.md)
-<!-- - [📖 &nbsp;Documentation](https://example.com) -->
+- [📖 &nbsp;Architecture](/ARCHITECTURE.md)
+- [📋 &nbsp;Implementation Plan](/docs/plans/2026-10-23-nuxt-copilotkit-implementation-plan.md)
 
-## Features
+## Status
 
-<!-- Highlight some of the features your module provide here -->
-- ⛰ &nbsp;Foo
-- 🚠 &nbsp;Bar
-- 🌲 &nbsp;Baz
+**v1 is currently in development.** This module provides the core integration surface defined in the implementation plan:
+
+- SSR-safe hydration for CopilotKit components
+- Built-in Nitro route (`/api/_copilotkit`) for runtime integration
+- Hybrid provider with zero-template client plugin and `<CopilotKit>` wrapper
+- Pass-through composables via `#copilotkit` and auto-registered upstream components
+- GenUI/HITL helpers (`useCopilotGenUI`, `useCopilotHITL`)
+- DevTools tab for configuration and health monitoring
 
 ## Quick Setup
 
-1. Add `my-module` dependency to your project
+1. Install the module and required peer dependencies:
 
 ```bash
-# Using pnpm
-pnpm add -D my-module
-
-# Using yarn
-yarn add --dev my-module
-
-# Using npm
-npm install --save-dev my-module
+pnpm add -D nuxt-copilotkit
 ```
 
-2. Add `my-module` to the `modules` section of `nuxt.config.ts`
+2. Install the required peer dependency `@copilotkit/vue`:
 
-```js
+```bash
+pnpm add @copilotkit/vue
+```
+
+3. Optionally install `@copilotkit/runtime` (only needed when using the built-in Nitro route):
+
+```bash
+pnpm add @copilotkit/runtime
+```
+
+4. Add `nuxt-copilotkit` to the `modules` section of `nuxt.config.ts`:
+
+```ts
 export default defineNuxtConfig({
   modules: [
-    'my-module'
+    'nuxt-copilotkit'
   ]
 })
 ```
 
-That's it! You can now use My Module in your Nuxt app ✨
+That's it! You can now use nuxt-copilotkit in your Nuxt app ✨
 
 ## Development
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Generate type stubs
-npm run dev:prepare
+pnpm dev:prepare
 
-# Develop with playground, with devtools client ui
-npm run dev
+# Develop with playground
+pnpm dev
 
 # Develop with playground, with bundled client ui
-npm run play:prod
+pnpm play:prod
 
 # Run ESLint
-npm run lint
+pnpm lint
 
 # Run Vitest
-npm run test
-npm run test:watch
-
-# Release new version
-npm run release
+pnpm test
 ```
 
+## Documentation
+
+- **[ARCHITECTURE.md](/ARCHITECTURE.md)** — Module layering, configuration flow, SSR boundary, and complete `ModuleOptions` reference
+- **[Implementation Plan](/docs/plans/2026-10-23-nuxt-copilotkit-implementation-plan.md)** — Design decisions, success criteria, test matrix, and phased rollout
+
 <!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/my-module/latest.svg?style=flat&colorA=18181B&colorB=28CF8D
-[npm-version-href]: https://npmjs.com/package/my-module
+[npm-version-src]: https://img.shields.io/npm/v/nuxt-copilotkit/latest.svg?style=flat&colorA=18181B&colorB=28CF8D
+[npm-version-href]: https://npmjs.com/package/nuxt-copilotkit
 
-[npm-downloads-src]: https://img.shields.io/npm/dm/my-module.svg?style=flat&colorA=18181B&colorB=28CF8D
-[npm-downloads-href]: https://npmjs.com/package/my-module
+[npm-downloads-src]: https://img.shields.io/npm/dm/nuxt-copilotkit.svg?style=flat&colorA=18181B&colorB=28CF8D
+[npm-downloads-href]: https://npmjs.com/package/nuxt-copilotkit
 
-[license-src]: https://img.shields.io/npm/l/my-module.svg?style=flat&colorA=18181B&colorB=28CF8D
-[license-href]: https://npmjs.com/package/my-module
+[license-src]: https://img.shields.io/npm/l/nuxt-copilotkit.svg?style=flat&colorA=18181B&colorB=28CF8D
+[license-href]: https://npmjs.com/package/nuxt-copilotkit
 
 [nuxt-src]: https://img.shields.io/badge/Nuxt-18181B?logo=nuxt
 [nuxt-href]: https://nuxt.com

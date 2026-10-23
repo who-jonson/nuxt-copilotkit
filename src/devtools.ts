@@ -1,10 +1,18 @@
+/**
+ * Nuxt DevTools integration for nuxt-copilotkit: serves the client UI and
+ * registers the `nuxt-copilotkit` custom tab.
+ */
 import { existsSync } from 'node:fs';
 import type { Nuxt } from 'nuxt/schema';
 import type { Resolver } from '@nuxt/kit';
 
-const DEVTOOLS_UI_ROUTE = '/__my-module';
+const DEVTOOLS_UI_ROUTE = '/__nuxt-copilotkit';
 const DEVTOOLS_UI_LOCAL_PORT = 3300;
 
+/**
+ * Registers the nuxt-copilotkit DevTools tab with the given Nuxt instance,
+ * serving the prebuilt client in production or proxying the dev client.
+ */
 export function setupDevToolsUI(nuxt: Nuxt, resolver: Resolver) {
   const clientPath = resolver.resolve('./client');
   const isProductionBuild = existsSync(clientPath);
@@ -36,11 +44,11 @@ export function setupDevToolsUI(nuxt: Nuxt, resolver: Resolver) {
   nuxt.hook('devtools:customTabs', (tabs) => {
     tabs.push({
       // unique identifier
-      name: 'my-module',
+      name: 'nuxt-copilotkit',
       // title to display in the tab
-      title: 'My Module',
+      title: 'Nuxt CopilotKit',
       // any icon from Iconify, or a URL to an image
-      icon: 'carbon:apps',
+      icon: 'carbon:bot',
       // iframe view
       view: {
         type: 'iframe',

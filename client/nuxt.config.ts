@@ -12,7 +12,7 @@ export default defineNuxtConfig({
   },
 
   app: {
-    baseURL: '/__my-module'
+    baseURL: '/__nuxt-copilotkit'
   },
 
   compatibilityDate: '2024-08-21',

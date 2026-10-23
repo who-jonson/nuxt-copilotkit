@@ -1,7 +1,7 @@
 {
   "name": "nuxt-copilotkit",
   "version": "0.0.1",
-  "description": "My new Nuxt module",
+  "description": "SSR-safe CopilotKit integration for Nuxt 4 — built-in Nitro runtime route, GenUI/HITL helpers, and a devtools tab",
   "license": "MIT",
   "type": "module",
   "repository": "who-jonson/nuxt-copilotkit",

@@ -1,7 +1,12 @@
-import MyModule from '../../../src/module';
+// Minimal Nuxt fixture mirroring the nuxt-copilotkit module's real consumer shape.
+import NuxtCopilotKit from '../../../src/module';
 
 export default defineNuxtConfig({
   modules: [
-    MyModule
-  ]
+    NuxtCopilotKit
+  ],
+
+  compatibilityDate: 'latest',
+
+  copilotkit: {}
 });
