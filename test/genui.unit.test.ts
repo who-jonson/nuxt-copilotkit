@@ -13,6 +13,12 @@ import type { GenUIToolRegistration, HITLActionRegistration } from '../src/runti
 import type { StandardSchemaV1 } from '@copilotkit/shared';
 import type { Component } from 'vue';
 
+// Simulates import.meta.server (see vitest.unit.config.ts): reads/writes globalThis.__NUXT_SERVER__.
+const ssrFlag = {
+  get value() { return (globalThis as { __NUXT_SERVER__?: boolean }).__NUXT_SERVER__; },
+  set value(v: boolean | undefined) { (globalThis as { __NUXT_SERVER__?: boolean }).__NUXT_SERVER__ = v; }
+};
+
 // Hoisted mocks - properly hoisted
 const { mockUseRenderTool, mockUseHumanInTheLoop, mockUseState, mockResolveComponent, mockH } = vi.hoisted(() => {
   return {
@@ -45,7 +51,7 @@ vi.mock('vue', async (importOriginal) => {
 
 // TODO(quality pass): '#imports' mocking does not intercept under the Nuxt-aware vitest config and the
 // nuxt environment needs happy-dom (not installed). Re-enable once the harness is settled.
-describe.skip('useCopilotGenUI', () => {
+describe('useCopilotGenUI', () => {
   let mockRegistry: GenUIToolRegistration[];
 
   beforeEach(() => {
@@ -63,8 +69,8 @@ describe.skip('useCopilotGenUI', () => {
 
   it('should no-op on server', () => {
     // Simulate SSR environment
-    const originalMeta = import.meta.server;
-    Object.defineProperty(import.meta, 'server', { value: true, writable: true });
+    const originalMeta = ssrFlag.value;
+    ssrFlag.value = true;
 
     useCopilotGenUI({
       name: 'test-tool',
@@ -76,11 +82,11 @@ describe.skip('useCopilotGenUI', () => {
     expect(mockUseState).not.toHaveBeenCalled();
 
     // Restore
-    Object.defineProperty(import.meta, 'server', { value: originalMeta, writable: true });
+    ssrFlag.value = originalMeta;
   });
 
   it('should delegate to useRenderTool with resolved component', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     const mockComponent = 'TestComponent';
     const mockParameters = { foo: 'bar' };
@@ -106,7 +112,7 @@ describe.skip('useCopilotGenUI', () => {
   });
 
   it('should record registration in useState registry', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     useCopilotGenUI({
       name: 'chart-tool',
@@ -125,7 +131,7 @@ describe.skip('useCopilotGenUI', () => {
   });
 
   it('should update existing registration on duplicate name', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     // First registration
     useCopilotGenUI({
@@ -154,7 +160,7 @@ describe.skip('useCopilotGenUI', () => {
   });
 
   it('should handle wildcard tool registration', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     useCopilotGenUI({
       name: '*',
@@ -170,7 +176,7 @@ describe.skip('useCopilotGenUI', () => {
   });
 
   it('should log error when component not found', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     // Mock resolveComponent to return string (unresolved)
     mockResolveComponent.mockReturnValueOnce('UnresolvedComponent');
@@ -194,7 +200,7 @@ describe.skip('useCopilotGenUI', () => {
   });
 
   it('should handle function render', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     const renderFn = vi.fn((_props: unknown) => 'rendered');
 
@@ -214,7 +220,7 @@ describe.skip('useCopilotGenUI', () => {
   });
 
   it('should handle component object render', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     const compObject = { name: 'MyComp', setup: vi.fn() };
 
@@ -234,7 +240,7 @@ describe.skip('useCopilotGenUI', () => {
   });
 });
 
-describe.skip('useCopilotHITL', () => {
+describe('useCopilotHITL', () => {
   let mockRegistry: HITLActionRegistration[];
 
   beforeEach(() => {
@@ -249,7 +255,7 @@ describe.skip('useCopilotHITL', () => {
   });
 
   it('should no-op on server', () => {
-    Object.defineProperty(import.meta, 'server', { value: true, writable: true });
+    ssrFlag.value = true;
 
     useCopilotHITL({
       name: 'approve',
@@ -260,11 +266,11 @@ describe.skip('useCopilotHITL', () => {
     expect(mockUseHumanInTheLoop).not.toHaveBeenCalled();
     expect(mockUseState).not.toHaveBeenCalled();
 
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
   });
 
   it('should delegate to useHumanInTheLoop with resolved component', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     const mockParameters = { reason: 'test' };
 
@@ -286,7 +292,7 @@ describe.skip('useCopilotHITL', () => {
   });
 
   it('should record registration in useState registry', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     useCopilotHITL({
       name: 'hitl-action',
@@ -305,7 +311,7 @@ describe.skip('useCopilotHITL', () => {
   });
 
   it('should update existing HITL registration on duplicate name', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     useCopilotHITL({
       name: 'action-x',
@@ -330,7 +336,7 @@ describe.skip('useCopilotHITL', () => {
   });
 
   it('should log error when HITL component not found', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     mockResolveComponent.mockReturnValueOnce('UnresolvedHITL');
 
@@ -353,7 +359,7 @@ describe.skip('useCopilotHITL', () => {
   });
 
   it('should handle function render', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     const renderFn = vi.fn((_props: unknown) => 'rendered');
 
@@ -373,7 +379,7 @@ describe.skip('useCopilotHITL', () => {
   });
 
   it('should handle component object render', () => {
-    Object.defineProperty(import.meta, 'server', { value: false, writable: true });
+    ssrFlag.value = false;
 
     const compObject = { name: 'HITLComp', setup: vi.fn() };
 

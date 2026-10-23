@@ -39,7 +39,7 @@
     "release": "npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest run",
+    "test": "vitest run && vitest run -c vitest.unit.config.ts",
     "test:watch": "vitest watch"
   },
   "dependencies": {

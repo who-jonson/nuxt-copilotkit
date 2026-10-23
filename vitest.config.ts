@@ -13,9 +13,7 @@ import { configDefaults } from 'vitest/config';
  * - `runtime-config.test.ts` — `NUXT_COPILOTKIT_*` env plumbing; `public.runtimeUrl` === resolved path.
  * - `upstream-drift.test.ts` — churn guard: runtime exports of `@copilotkit/vue/v2` vs the
  *   module barrel + registered component list.
- * - `genui.unit.test.ts` (Phase 4) — needs the Nuxt environment and therefore MUST carry the
- *   `// @vitest-environment nuxt` file pragma; the pragma resolves because this root config
- *   is created with `defineVitestConfig` (plan-check W2 fix).
+ * - `genui.unit.test.ts` (Phase 4) — runs under `vitest.unit.config.ts` (plain Vite, `#imports` stubbed).
  *
  * Integration specs (SSR/route/registration) run in the default node environment and drive a
  * built fixture via `@nuxt/test-utils` `setup()` + `$fetch`.
@@ -24,6 +22,7 @@ export default defineVitestConfig({
   test: {
     environment: 'node',
     // Keep sibling git worktrees and the pnpm store out of test discovery.
-    exclude: [...configDefaults.exclude, '.pi/**', '.pnpm-store/**']
+    // *.unit.test.ts run under vitest.unit.config.ts (plain Vite, no Nuxt plugin).
+    exclude: [...configDefaults.exclude, '.pi/**', '.pnpm-store/**', '**/*.unit.test.ts']
   }
 });
