@@ -1,6 +1,6 @@
 /**
  * Upstream drift guard: verifies that composables re-exported in the barrel
- * (src/runtime/copilotkit/index.ts) actually exist in the installed @copilotkit/vue/v2.
+ * (src/runtime/app/copilotkit/index.ts) actually exist in the installed @copilotkit/vue/v2.
  * Excludes legacy v1 exports (useCopilotAction, useCopilotReadable) per design decision D1.
  */
 import { readFileSync } from 'node:fs';
@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest';
 describe('upstream-drift guard', () => {
   it('barrel re-exports match runtime exports from @copilotkit/vue/v2', async () => {
     // Read the barrel source
-    const barrelPath = resolve(__dirname, '../src/runtime/copilotkit/index.ts');
+    const barrelPath = resolve(__dirname, '../src/runtime/app/copilotkit/index.ts');
     const barrelSource = readFileSync(barrelPath, 'utf-8');
 
     // Extract composable names from the upstream re-export block
@@ -27,7 +27,7 @@ describe('upstream-drift guard', () => {
     for (const block of upstreamBlockMatch || []) {
       const namesMatch = block.match(/export\s*\{([^}]+)\}/);
       if (namesMatch) {
-        const names = namesMatch[1]
+        const names = (namesMatch[1] ?? '')
           .split(',')
           .map(n => n.trim())
           .filter(n => n && !n.startsWith('//') && !n.startsWith('type '))
@@ -64,7 +64,7 @@ describe('upstream-drift guard', () => {
 
   it('excludes legacy v1 exports per design decision D1', async () => {
     // Read the barrel source
-    const barrelPath = resolve(__dirname, '../src/runtime/copilotkit/index.ts');
+    const barrelPath = resolve(__dirname, '../src/runtime/app/copilotkit/index.ts');
     const barrelSource = readFileSync(barrelPath, 'utf-8');
 
     // Verify legacy v1 composables are NOT present in export statements

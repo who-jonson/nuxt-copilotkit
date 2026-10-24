@@ -28,9 +28,9 @@ export interface ModuleOptions {
    */
   runtime: false | {
     /** Register the built-in CopilotKit runtime route. @default true */
-    enabled: boolean;
+    enabled?: boolean;
     /** Runtime endpoint path; both `path` and `path/**` routes are registered. @default '/api/_copilotkit' */
-    path: string;
+    path?: string;
     /** External runtime URL; when set, the built-in route is not registered. */
     url?: string;
     /** Model identifier used by the built-in runtime. @default 'openai/gpt-4o' */
@@ -47,7 +47,7 @@ export interface ModuleOptions {
    */
   provider: {
     /** Auto-wrap the app in `<CopilotKitProvider>` (zero-template). Set `false` to use the explicit `<CopilotKit>` wrapper. @default true */
-    autoWrap: boolean;
+    autoWrap?: boolean;
     /** Enable upstream CopilotKit debug logging. */
     debug?: boolean;
     /** Upstream CopilotKit Inspector; never runs in SSR/production, `'dev'` restricts it to development. */
@@ -129,12 +129,4 @@ export interface ModulePublicRuntimeConfig {
     /** Upstream debug flag mirrored from `provider.debug`. */
     debug?: boolean;
   };
-}
-
-// Augment Nuxt's RuntimeConfig types
-declare module '@nuxt/schema' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface RuntimeConfig extends ModuleRuntimeConfig {}
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface PublicRuntimeConfig extends ModulePublicRuntimeConfig {}
 }

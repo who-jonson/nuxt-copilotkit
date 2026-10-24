@@ -2,17 +2,21 @@
  * nuxt-copilotkit module entrypoint: options wiring, registration, aliases,
  * and Nuxt DevTools hook-up.
  */
-import { addComponent, addImportsSources, addPlugin, addServerHandler, addServerImports, createResolver, defineNuxtModule, updateRuntimeConfig, useLogger, addTypeTemplate, tryResolveModule } from '@nuxt/kit';
+import { addComponent, addImportsSources, addPlugin, addServerHandler, addServerImports, createResolver, defineNuxtModule, ensureDependencyInstalled, getAddDependencyCommand, updateRuntimeConfig, useLogger, addTypeTemplate } from '@nuxt/kit';
 import defu from 'defu';
 import { setupDevToolsUI } from './devtools';
+import { name, version } from '../package.json';
 import { defaults, type ModuleOptions, type ModulePublicRuntimeConfig, type ModuleRuntimeConfig } from './options';
 
 export type { ModuleOptions, ModulePublicRuntimeConfig, ModuleRuntimeConfig } from './options';
 
+const configKey = 'copilotkit' as const;
+
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'nuxt-copilotkit',
-    configKey: 'copilotkit',
+    name,
+    version,
+    configKey,
     compatibility: {
       nuxt: '>=4.6.0'
     }
@@ -70,7 +74,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Register aliases for #copilotkit and #copilotkit/server
     // Targets are created by sibling tickets; alias registration itself won't break build/test
-    nuxt.options.alias['#copilotkit'] = resolver.resolve('./runtime/copilotkit');
+    nuxt.options.alias['#copilotkit'] = resolver.resolve('./runtime/app/copilotkit');
     nuxt.options.alias['#copilotkit/server'] = resolver.resolve('./runtime/server/utils');
 
     // Build configuration: transpile @copilotkit/vue for SSR safety
@@ -81,16 +85,15 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.css.push('@copilotkit/vue/styles.css');
     }
 
-    const logger = useLogger('nuxt-copilotkit');
+    const logger = useLogger(name);
 
     // (a) Built-in route registration (runtimeUrl non-empty and no runtime.url)
     if (runtimeUrl && runtime !== false && !runtime.url) {
       // Ensure @copilotkit/runtime is available when built-in route is enabled
-      if (!await tryResolveModule('@copilotkit/runtime', nuxt.options.rootDir)) {
-        logger.warn(
-          'Built-in CopilotKit runtime route is enabled, but @copilotkit/runtime is not installed.\n'
-          + 'Install it with: pnpm add @copilotkit/runtime @ag-ui/client'
-        );
+      if (!await ensureDependencyInstalled('@copilotkit/runtime')) {
+        const command = await getAddDependencyCommand('@copilotkit/runtime', nuxt.options.rootDir);
+
+        logger.warn(`\`@copilotkit/runtime\` is required. Run \`${command}\` to install it.`);
       }
 
       // Register both base path and wildcard path
@@ -98,6 +101,7 @@ export default defineNuxtModule<ModuleOptions>({
         route: runtimeUrl,
         handler: resolver.resolve('./runtime/server/api/copilotkit')
       });
+
       addServerHandler({
         route: `${runtimeUrl}/**`,
         handler: resolver.resolve('./runtime/server/api/copilotkit')
@@ -153,11 +157,10 @@ export default defineNuxtModule<ModuleOptions>({
 
     if (options.components !== false) {
       // Ensure @copilotkit/vue is available
-      if (!await tryResolveModule('@copilotkit/vue', nuxt.options.rootDir)) {
-        logger.warn(
-          '@copilotkit/vue is not installed. Components will not be registered.\n'
-          + 'Install it with: pnpm add @copilotkit/vue'
-        );
+      if (!await ensureDependencyInstalled('@copilotkit/vue')) {
+        const command = await getAddDependencyCommand('@copilotkit/vue', nuxt.options.rootDir);
+
+        logger.warn(`\`@copilotkit/vue\` is required. Run \`${command}\` to install it.`);
       }
 
       const prefix = options.components.prefix ?? '';
@@ -182,7 +185,7 @@ export default defineNuxtModule<ModuleOptions>({
       // Register our universal CopilotKit wrapper component (NOT mode client)
       addComponent({
         name: 'CopilotKit',
-        filePath: resolver.resolve('./runtime/components/CopilotKit.vue')
+        filePath: resolver.resolve('./runtime/app/components/CopilotKit.vue')
       });
     }
 
@@ -191,7 +194,7 @@ export default defineNuxtModule<ModuleOptions>({
       const importsPrefix = options.imports.prefix ?? '';
       const importsIncludeSet = options.imports.include ? new Set(options.imports.include) : null;
 
-      // Value exports of the #copilotkit barrel (src/runtime/copilotkit/index.ts); kept in sync by test/upstream-drift.test.ts
+      // Value exports of the #copilotkit barrel (src/runtime/app/copilotkit/index.ts); kept in sync by test/upstream-drift.test.ts
       const composables: string[] = [
         'useAgent', 'useAgentContext', 'useAttachments', 'useCapabilities', 'useComponent',
         'useConfigureSuggestions', 'useDefaultRenderTool', 'useFrontendTool', 'useHumanInTheLoop',
@@ -218,11 +221,14 @@ export default defineNuxtModule<ModuleOptions>({
 
     // (c) Plugin registration (explicit, Nuxt doesn't auto-scan module runtime plugins)
     if (options.provider.autoWrap !== false) {
-      addPlugin(resolver.resolve('./runtime/plugin.client'));
+      addPlugin(
+        resolver.resolve('./runtime/app/plugin.client')
+      );
     }
 
-    if (options.devtools)
-      setupDevToolsUI(nuxt, resolver);
+    if (options.devtools) {
+      setupDevToolsUI(nuxt, resolver, options);
+    }
 
     // Only reference @ag-ui/client types when the runtime peers are expected; external-runtime/`runtime: false`
     // consumers may not have them installed.
@@ -230,7 +236,7 @@ export default defineNuxtModule<ModuleOptions>({
     const agentImport = usesBuiltInRuntime ? 'import type { AbstractAgent } from \'@ag-ui/client\';' : '';
     const agentType = usesBuiltInRuntime ? 'AbstractAgent' : 'unknown';
     addTypeTemplate({
-      filename: 'modules/nuxt-copilotkit.d.ts',
+      filename: 'types/nuxt-copilotkit.d.ts',
       getContents: () => `// auto-created by nuxt-copilotkit
 /**
  * Nitropack runtime hooks augmentation for nuxt-copilotkit vNext seams.
@@ -261,6 +267,6 @@ declare module 'nitropack' {
   }
 }
 `
-    }, { nitro: true, node: true });
+    }, { nitro: true, node: true, nuxt: true });
   }
 });

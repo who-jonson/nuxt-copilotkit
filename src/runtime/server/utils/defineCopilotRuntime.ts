@@ -52,7 +52,9 @@ export function createRemoteAgent(config: RemoteAgentConfig): AbstractAgent {
 /** Builds the runtime from runtimeConfig and the `copilotkit:runtime` hook (no user factory). */
 async function createDefaultRuntime(event: H3Event): Promise<CopilotRuntime> {
   const config = useRuntimeConfig(event);
-  const remote = config.copilotkit.agents ?? {};
+  // Generated runtimeConfig types are inferred from build-time values, so `agents` ({} by default)
+  // widens to unknown entries; the module writes RemoteAgentConfig-shaped values only.
+  const remote = (config.copilotkit.agents ?? {}) as Record<string, RemoteAgentConfig>;
   const agents: Record<string, AbstractAgent> = {};
 
   if (Object.keys(remote).length > 0) {

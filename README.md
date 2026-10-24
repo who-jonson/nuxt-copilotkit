@@ -35,10 +35,10 @@ pnpm add -D nuxt-copilotkit
 pnpm add @copilotkit/vue
 ```
 
-3. Optionally install `@copilotkit/runtime` and `@ag-ui/client` (only needed when using the built-in Nitro route):
+3. Optionally install `@copilotkit/runtime` (only needed when using the built-in Nitro route):
 
 ```bash
-pnpm add @copilotkit/runtime @ag-ui/client
+pnpm add @copilotkit/runtime
 ```
 
 4. Add `nuxt-copilotkit` to the `modules` section of `nuxt.config.ts`:
@@ -131,7 +131,7 @@ export default defineNuxtConfig({
 })
 ```
 
-This needs the optional peer `@ag-ui/client` (installed alongside `@copilotkit/runtime`). Select a non-`default` agent in the UI with the component's `agent-id` prop.
+This needs `@copilotkit/runtime` (which brings `@ag-ui/client`). Select a non-`default` agent in the UI with the component's `agent-id` prop.
 
 ### Server Runtime Utilities
 

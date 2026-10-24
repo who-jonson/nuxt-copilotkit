@@ -6,12 +6,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Now import the module under test
-import { useCopilotGenUI, useCopilotHITL } from '../src/runtime/composables/genui';
+import { useCopilotGenUI, useCopilotHITL } from '../src/runtime/app/composables/genui';
 
 // Add missing type imports for test
-import type { GenUIToolRegistration, HITLActionRegistration } from '../src/runtime/composables/genui';
+import type { GenUIToolRegistration, HITLActionRegistration } from '../src/runtime/app/composables/genui';
 import type { StandardSchemaV1 } from '@copilotkit/shared';
-import type { Component } from 'vue';
 
 // Simulates import.meta.server (see vitest.unit.config.ts): reads/writes globalThis.__NUXT_SERVER__.
 const ssrFlag = {
@@ -93,7 +92,7 @@ describe('useCopilotGenUI', () => {
 
     useCopilotGenUI({
       name: 'my-tool',
-      parameters: mockParameters as StandardSchemaV1,
+      parameters: mockParameters as unknown as StandardSchemaV1,
       render: mockComponent,
       description: 'A test tool'
     });
@@ -227,7 +226,7 @@ describe('useCopilotGenUI', () => {
     useCopilotGenUI({
       name: 'comp-tool',
       parameters: {} as StandardSchemaV1,
-      render: compObject as Component<unknown>
+      render: compObject as never
     });
 
     expect(mockUseRenderTool).toHaveBeenCalledWith(
@@ -259,7 +258,7 @@ describe('useCopilotHITL', () => {
 
     useCopilotHITL({
       name: 'approve',
-      parameters: {} as Record<string, unknown>,
+      parameters: {} as never,
       render: 'ApprovalComponent'
     });
 
@@ -276,7 +275,7 @@ describe('useCopilotHITL', () => {
 
     useCopilotHITL({
       name: 'confirm-action',
-      parameters: mockParameters as Record<string, unknown>,
+      parameters: mockParameters as never,
       render: 'ConfirmDialog',
       description: 'User confirmation'
     });
@@ -296,7 +295,7 @@ describe('useCopilotHITL', () => {
 
     useCopilotHITL({
       name: 'hitl-action',
-      parameters: {} as Record<string, unknown>,
+      parameters: {} as never,
       render: 'HITLComponent',
       description: 'Human approval'
     });
@@ -315,14 +314,14 @@ describe('useCopilotHITL', () => {
 
     useCopilotHITL({
       name: 'action-x',
-      parameters: {} as Record<string, unknown>,
+      parameters: {} as never,
       render: 'CompX',
       description: 'First'
     });
 
     useCopilotHITL({
       name: 'action-x',
-      parameters: {} as Record<string, unknown>,
+      parameters: {} as never,
       render: 'CompY',
       description: 'Second'
     });
@@ -344,7 +343,7 @@ describe('useCopilotHITL', () => {
 
     useCopilotHITL({
       name: 'bad-hitl',
-      parameters: {} as Record<string, unknown>,
+      parameters: {} as never,
       render: 'UnresolvedHITL'
     });
 
@@ -365,7 +364,7 @@ describe('useCopilotHITL', () => {
 
     useCopilotHITL({
       name: 'hitl-fn',
-      parameters: {} as Record<string, unknown>,
+      parameters: {} as never,
       render: renderFn
     });
 
@@ -385,8 +384,8 @@ describe('useCopilotHITL', () => {
 
     useCopilotHITL({
       name: 'hitl-comp',
-      parameters: {} as Record<string, unknown>,
-      render: compObject as Component<unknown>
+      parameters: {} as never,
+      render: compObject as never
     });
 
     expect(mockUseHumanInTheLoop).toHaveBeenCalledWith(

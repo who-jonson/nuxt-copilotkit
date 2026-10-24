@@ -8,11 +8,15 @@ import { useState, resolveComponent } from '#imports';
 import { useRenderTool, useHumanInTheLoop } from '@copilotkit/vue/v2';
 import type { WatchSource, Component, VNodeChild } from 'vue';
 import type { StandardSchemaV1 } from '@copilotkit/shared';
-import type {
-  RenderToolProps,
-  VueHumanInTheLoop
-} from '@copilotkit/vue/v2';
+import type { VueHumanInTheLoop } from '@copilotkit/vue/v2';
 import { h } from 'vue';
+
+// Upstream does not re-export `RenderToolProps` from `@copilotkit/vue/v2`; derive it from the
+// typed `useRenderTool` overload so it tracks upstream changes.
+type TypedRenderToolRender<S extends StandardSchemaV1> = Parameters<typeof useRenderTool<S>>[0]['render'];
+
+/** Props passed to a typed GenUI render function/component (in-progress, executing or complete). */
+export type RenderToolProps<S extends StandardSchemaV1> = Parameters<Extract<TypedRenderToolRender<S>, (props: never) => VNodeChild>>[0];
 
 /**
  * Serializable metadata for a registered GenUI tool (devtools consumption).
@@ -88,7 +92,10 @@ export function useCopilotGenUI(
 
   // Resolve component if string name provided
   const renderValue = config.render;
-  let resolvedRender: ((props: unknown) => VNodeChild) | Component<unknown>;
+  // Mirrors upstream's wildcard `render` contract; the implementation erases the schema type
+  // so one resolved value can feed both `useRenderTool` overloads.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let resolvedRender: ((props: any) => VNodeChild) | Component<any>;
 
   if (typeof renderValue === 'string') {
     const resolved = resolveComponent(renderValue);
@@ -105,13 +112,10 @@ export function useCopilotGenUI(
     }
 
     // Wrap component in render function
-    resolvedRender = (props: unknown) => h(resolved as Component, props);
-  }
-  else if (typeof renderValue === 'function') {
-    resolvedRender = renderValue;
+    resolvedRender = (props: Record<string, unknown>) => h(resolved as Component, props);
   }
   else {
-    // It's already a Component
+    // Render function or Component, passed through unchanged
     resolvedRender = renderValue;
   }
 

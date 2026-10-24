@@ -3,8 +3,8 @@ import { useDevtoolsClient } from '@nuxt/devtools-kit/iframe-client';
 
 interface DevToolsConfig {
   options: {
-    runtime: { enabled: boolean; path: string; url?: string; model?: string } | false;
-    provider: { autoWrap: boolean; debug?: boolean; inspector?: boolean | 'dev' };
+    runtime: { enabled?: boolean; path?: string; url?: string; model?: string } | false;
+    provider: { autoWrap?: boolean; debug?: boolean; inspector?: boolean | 'dev' };
     components: { prefix?: string; global?: boolean; include?: string[] } | false;
     imports: { prefix?: string; include?: string[] } | false;
     styles: boolean;
@@ -38,8 +38,9 @@ async function fetchConfig() {
   error.value = null;
 
   try {
-    const rpc = client.value.devtools.rpc;
-    configData.value = await rpc.call('nuxt-copilotkit', 'getConfig');
+    // Namespaced proxy pairing with the server's `extendServerRpc('nuxt-copilotkit', ...)`
+    const rpc = client.value.devtools.extendClientRpc<{ getConfig: () => DevToolsConfig }>('nuxt-copilotkit', {});
+    configData.value = await rpc.getConfig();
   }
   catch (err: unknown) {
     error.value = (err as Error)?.message || 'Failed to fetch config';

@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import CopilotKit from '../../../src/runtime/components/CopilotKit.vue';
+import CopilotKit from '../../../src/runtime/app/components/CopilotKit.vue';
 import { useNuxtCopilotKit } from '#copilotkit/keys';
 
 // Verify #copilotkit/keys alias resolution

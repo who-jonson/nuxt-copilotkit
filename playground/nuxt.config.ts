@@ -1,14 +1,15 @@
 // Playground Nuxt app used to develop the nuxt-copilotkit module locally.
-import { resolve } from 'node:path';
-import { defineNuxtModule } from '@nuxt/kit';
+import { defineNuxtModule, createResolver } from '@nuxt/kit';
 import { startSubprocess } from '@nuxt/devtools-kit';
+
+const { resolve } = createResolver(import.meta.url);
 
 export default defineNuxtConfig({
   modules: [
     /**
      * The module under development.
      */
-    '../src/module',
+    'nuxt-copilotkit',
     /**
      * Start a sub Nuxt Server for developing the devtools client.
      *
@@ -24,7 +25,7 @@ export default defineNuxtConfig({
           {
             command: 'npx',
             args: ['nuxi', 'dev', '--port', '3300'],
-            cwd: resolve(__dirname, '../client')
+            cwd: resolve('../client')
           },
           {
             id: 'nuxt-copilotkit:client',
@@ -37,6 +38,9 @@ export default defineNuxtConfig({
 
   devtools: {
     enabled: true
+  },
+  alias: {
+    'nuxt-copilotkit': resolve('../src/module')
   },
 
   compatibilityDate: 'latest',

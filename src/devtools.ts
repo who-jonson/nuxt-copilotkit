@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 import type { Nuxt } from 'nuxt/schema';
 import { extendViteConfig, type Resolver, useRuntimeConfig } from '@nuxt/kit';
 import { addCustomTab, extendServerRpc, onDevToolsInitialized } from '@nuxt/devtools-kit';
+import type { ModuleOptions } from './options';
 
 const DEVTOOLS_UI_ROUTE = '/__nuxt-copilotkit';
 const DEVTOOLS_UI_LOCAL_PORT = 3300;
@@ -16,8 +17,8 @@ const DEVTOOLS_UI_LOCAL_PORT = 3300;
 interface DevToolsConfigSnapshot {
   /** Resolved module options (public subset) */
   options: {
-    runtime: { enabled: boolean; path: string; url?: string; model?: string } | false;
-    provider: { autoWrap: boolean; debug?: boolean; inspector?: boolean | 'dev' };
+    runtime: { enabled?: boolean; path?: string; url?: string; model?: string } | false;
+    provider: { autoWrap?: boolean; debug?: boolean; inspector?: boolean | 'dev' };
     components: { prefix?: string; global?: boolean; include?: string[] } | false;
     imports: { prefix?: string; include?: string[] } | false;
     styles: boolean;
@@ -41,8 +42,12 @@ interface DevToolsConfigSnapshot {
  * Registers the nuxt-copilotkit DevTools tab with the given Nuxt instance,
  * serving the prebuilt client in production or proxying the dev client,
  * and exposing server RPC for config inspection.
+ *
+ * @param nuxt - Nuxt instance
+ * @param resolver - Module resolver used to locate the prebuilt client
+ * @param moduleOptions - Resolved module options (defaults merged), reported by `getConfig`
  */
-export function setupDevToolsUI(nuxt: Nuxt, resolver: Resolver) {
+export function setupDevToolsUI(nuxt: Nuxt, resolver: Resolver, moduleOptions: ModuleOptions) {
   const clientPath = resolver.resolve('./client');
   const isProductionBuild = existsSync(clientPath);
 
@@ -88,7 +93,6 @@ export function setupDevToolsUI(nuxt: Nuxt, resolver: Resolver) {
     }>('nuxt-copilotkit', {
       getConfig() {
         const runtimeConfig = useRuntimeConfig();
-        const moduleOptions = nuxt.options.copilotkit || {};
 
         // Determine runtime mode
         let runtimeMode: 'builtin' | 'external' | 'disabled' = 'disabled';

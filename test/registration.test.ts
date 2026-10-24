@@ -17,7 +17,7 @@ describe('registration tests', () => {
     });
 
     it('exposes runtimeUrl from default built-in route', async () => {
-      const config = await $fetch('/api/test-config') as { runtimeUrl: string };
+      const config = await $fetch<{ runtimeUrl: string }>('/api/test-config');
       expect(config.runtimeUrl).toBe('/api/_copilotkit');
     });
   });
@@ -28,7 +28,7 @@ describe('registration tests', () => {
     });
 
     it('sets runtimeUrl to empty string when runtime is false', async () => {
-      const config = await $fetch('/api/test-config') as { runtimeUrl: string };
+      const config = await $fetch<{ runtimeUrl: string }>('/api/test-config');
       expect(config.runtimeUrl).toBe('');
     });
   });
@@ -39,7 +39,7 @@ describe('registration tests', () => {
     });
 
     it('sets runtimeUrl to external URL and does not register built-in route', async () => {
-      const config = await $fetch('/api/test-config') as { runtimeUrl: string };
+      const config = await $fetch<{ runtimeUrl: string }>('/api/test-config');
       expect(config.runtimeUrl).toBe('https://external.example.com/api');
     });
   });
@@ -50,7 +50,7 @@ describe('registration tests', () => {
     });
 
     it('still exposes runtimeUrl when imports is disabled', async () => {
-      const config = await $fetch('/api/test-config') as { runtimeUrl: string };
+      const config = await $fetch<{ runtimeUrl: string }>('/api/test-config');
       expect(config.runtimeUrl).toBe('/api/_copilotkit');
     });
   });

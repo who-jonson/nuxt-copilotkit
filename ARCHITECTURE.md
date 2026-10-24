@@ -79,10 +79,10 @@ Three hooks declared with types in v1, no-op by default — vNext features attac
 |---|---|
 | `src/module.ts` | Options wiring, registration, aliases, devtools hook-up (rewritten from stub: `meta.name: 'nuxt-copilotkit'`, `configKey: 'copilotkit'`) |
 | `src/options.ts` | `ModuleOptions` types + defaults + `declare module 'nuxt/schema'` runtimeConfig augmentation |
-| `src/runtime/plugin.client.ts` | autoWrap provider install |
-| `src/runtime/components/CopilotKit.vue` | Explicit wrapper (reads `runtimeConfig.public.copilotkit`, forwards to upstream `CopilotKitProvider`) |
-| `src/runtime/copilotkit/index.ts` | `#copilotkit` composables barrel (upstream pass-through + our helpers) |
-| `src/runtime/composables/genui.ts` | `useCopilotGenUI`, `useCopilotHITL` |
+| `src/runtime/app/plugin.client.ts` | autoWrap provider install |
+| `src/runtime/app/components/CopilotKit.vue` | Explicit wrapper (reads `runtimeConfig.public.copilotkit`, forwards to upstream `CopilotKitProvider`) |
+| `src/runtime/app/copilotkit/index.ts` | `#copilotkit` composables barrel (upstream pass-through + our helpers) |
+| `src/runtime/app/composables/genui.ts` | `useCopilotGenUI`, `useCopilotHITL` |
 | `src/runtime/server/api/copilotkit.ts` | Nitro handler (memoized node-listener bridge) |
 | `src/runtime/server/utils/defineCopilotRuntime.ts` | Runtime construction util (memoized; server-auto-imported; `#copilotkit/server`) |
 | `src/devtools.ts` + `client/` | DevTools tab (id `nuxt-copilotkit`, route `/__nuxt-copilotkit`) |

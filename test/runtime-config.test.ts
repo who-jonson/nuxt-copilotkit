@@ -23,7 +23,7 @@ describe('runtime-config fixture', () => {
     });
 
     it('exposes private runtimeConfig.copilotkit with empty-string defaults', async () => {
-      const response = await $fetch('/api/config') as { private: { model: string; openaiApiKey: string; anthropicApiKey: string } };
+      const response = await $fetch<{ private: { model: string; openaiApiKey: string; anthropicApiKey: string } }>('/api/config');
       expect(response.private).toBeDefined();
       expect(response.private.model).toBe('openai/gpt-4o');
       // Empty string defaults allow NUXT_* env overrides — Nitro only applies overrides to keys that exist
@@ -32,7 +32,7 @@ describe('runtime-config fixture', () => {
     });
 
     it('exposes public runtimeConfig with resolved runtimeUrl from default path', async () => {
-      const response = await $fetch('/api/config') as { public: { runtimeUrl: string; debug: boolean } };
+      const response = await $fetch<{ public: { runtimeUrl: string; debug: boolean } }>('/api/config');
       expect(response.public).toBeDefined();
       // Default mode: runtime.enabled=true, runtime.path='/api/_copilotkit'
       expect(response.public.runtimeUrl).toBe('/api/_copilotkit');
@@ -55,28 +55,28 @@ describe('runtime-config fixture', () => {
     });
 
     it('applies NUXT_COPILOTKIT_MODEL override', async () => {
-      const response = await $fetch('/api/config') as { private: { model: string } };
+      const response = await $fetch<{ private: { model: string } }>('/api/config');
       expect(response.private.model).toBe('anthropic/claude-sonnet-4-5');
     });
 
     it('applies NUXT_COPILOTKIT_OPENAI_API_KEY override', async () => {
-      const response = await $fetch('/api/config') as { private: { openaiApiKey: string } };
+      const response = await $fetch<{ private: { openaiApiKey: string } }>('/api/config');
       // Empty string default allows env override to apply
       expect(response.private.openaiApiKey).toBe('sk-test-key-12345');
     });
 
     it('applies NUXT_COPILOTKIT_ANTHROPIC_API_KEY override', async () => {
-      const response = await $fetch('/api/config') as { private: { anthropicApiKey: string } };
+      const response = await $fetch<{ private: { anthropicApiKey: string } }>('/api/config');
       expect(response.private.anthropicApiKey).toBe('anthropic-test-key-67890');
     });
 
     it('applies NUXT_PUBLIC_COPILOTKIT_RUNTIME_URL override', async () => {
-      const response = await $fetch('/api/config') as { public: { runtimeUrl: string } };
+      const response = await $fetch<{ public: { runtimeUrl: string } }>('/api/config');
       expect(response.public.runtimeUrl).toBe('https://external.example.com/api');
     });
 
     it('applies NUXT_PUBLIC_COPILOTKIT_DEBUG override', async () => {
-      const response = await $fetch('/api/config') as { public: { debug: boolean } };
+      const response = await $fetch<{ public: { debug: boolean } }>('/api/config');
       expect(response.public.debug).toBe(true);
     });
   });
@@ -88,7 +88,7 @@ describe('runtime-config fixture', () => {
     });
 
     it('sets runtimeUrl to the external URL', async () => {
-      const response = await $fetch('/api/config') as { public: { runtimeUrl: string } };
+      const response = await $fetch<{ public: { runtimeUrl: string } }>('/api/config');
       expect(response.public.runtimeUrl).toBe('https://my-external-runtime.com/api');
     });
   });
@@ -100,7 +100,7 @@ describe('runtime-config fixture', () => {
     });
 
     it('sets runtimeUrl to empty string when runtime is false', async () => {
-      const response = await $fetch('/api/config') as { public: { runtimeUrl: string } };
+      const response = await $fetch<{ public: { runtimeUrl: string } }>('/api/config');
       expect(response.public.runtimeUrl).toBe('');
     });
   });
@@ -114,22 +114,22 @@ describe('runtime-config fixture', () => {
     });
 
     it('user-set openaiApiKey beats module default', async () => {
-      const response = await $fetch('/api/config') as { private: { openaiApiKey: string } };
+      const response = await $fetch<{ private: { openaiApiKey: string } }>('/api/config');
       expect(response.private.openaiApiKey).toBe('user-key');
     });
 
     it('user-set debug beats module provider.debug', async () => {
-      const response = await $fetch('/api/config') as { public: { debug: boolean } };
+      const response = await $fetch<{ public: { debug: boolean } }>('/api/config');
       expect(response.public.debug).toBe(true);
     });
 
     it('module-provided model still appears when user did not override', async () => {
-      const response = await $fetch('/api/config') as { private: { model: string } };
+      const response = await $fetch<{ private: { model: string } }>('/api/config');
       expect(response.private.model).toBe('openai/gpt-4o');
     });
 
     it('module-provided runtimeUrl still appears when user did not override', async () => {
-      const response = await $fetch('/api/config') as { public: { runtimeUrl: string } };
+      const response = await $fetch<{ public: { runtimeUrl: string } }>('/api/config');
       expect(response.public.runtimeUrl).toBe('/api/_copilotkit');
     });
   });

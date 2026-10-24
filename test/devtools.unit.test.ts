@@ -22,10 +22,10 @@ vi.mock('@nuxt/kit', () => ({
 
 const { setupDevToolsUI } = await import('../src/devtools');
 
-/** Minimal Nuxt stand-in exposing only what setupDevToolsUI reads. */
+/** Minimal Nuxt stand-in; resolved module options are passed directly, as module.ts does. */
 function setup(copilotkit: Record<string, unknown>) {
-  const nuxt = { options: { copilotkit }, hook: vi.fn() };
-  setupDevToolsUI(nuxt as never, { resolve: () => '/nonexistent-client' } as never);
+  const nuxt = { options: {}, hook: vi.fn() };
+  setupDevToolsUI(nuxt as never, { resolve: () => '/nonexistent-client' } as never, copilotkit as never);
 }
 
 describe('devtools getConfig', () => {

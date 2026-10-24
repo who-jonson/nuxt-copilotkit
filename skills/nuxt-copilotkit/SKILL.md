@@ -22,7 +22,7 @@ pnpm add @copilotkit/vue
 Optionally install `@copilotkit/runtime` (required for the built-in route):
 
 ```bash
-pnpm add @copilotkit/runtime @ag-ui/client
+pnpm add @copilotkit/runtime
 ```
 
 Enable in `nuxt.config.ts`:
@@ -124,7 +124,7 @@ export default defineNitroPlugin((nitro) => {
 **Available exports:**
 - `defineCopilotRuntime(factory)` — Register a factory `(event) => CopilotRuntime`; runs once, lazily
 - `getCopilotRuntime(event)` — Retrieve the (memoized) runtime instance
-- `createRemoteAgent({ url, headers?, description? })` — `HttpAgent` for any AG-UI backend (Google ADK, Claude Agent SDK, VoltAgent, LangGraph, A2A bridges); needs optional peer `@ag-ui/client`
+- `createRemoteAgent({ url, headers?, description? })` — `HttpAgent` for any AG-UI backend (Google ADK, Claude Agent SDK, VoltAgent, LangGraph, A2A bridges)
 
 **Nitro hooks:** `copilotkit:request` (every request), `copilotkit:runtime` (once, with the agents registry).
 
@@ -180,7 +180,7 @@ Access via Nuxt DevTools → CopilotKit tab.
 If using the built-in runtime route, install the optional peer dependency:
 
 ```bash
-pnpm add @copilotkit/runtime @ag-ui/client
+pnpm add @copilotkit/runtime
 ```
 
 Or disable the built-in route and use an external runtime:
