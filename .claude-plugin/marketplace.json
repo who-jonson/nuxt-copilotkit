@@ -1,0 +1,20 @@
+{
+  "name": "whoj",
+  "owner": {
+     "name": "B. Jonson",
+     "email": "contact@whoj.dev"
+  },
+  "plugins": [
+    {
+      "name": "nuxt-copilotkit",
+      "description": "Skill for building Nuxt apps with nuxt-copilotkit.",
+      "version": "0.0.1",
+      "source": "./",
+      "author": {
+        "name": "B. Jonson",
+        "email": "contact@whoj.dev"
+      },
+      "repository": "https://github.com/who-jonson/nuxt-copilotkit.git"
+    }
+  ]
+}

@@ -8,28 +8,23 @@ description: |
 
 # nuxt-copilotkit Skill
 
-SSR-safe [CopilotKit](https://copilotkit.ai) integration for Nuxt 4, providing a built-in Nitro runtime route, GenUI/HITL helpers, and a DevTools tab for debugging.
+SSR-safe [CopilotKit](https://copilotkit.ai) integration for Nuxt, providing a built-in Nitro runtime route, GenUI/HITL helpers, and a DevTools tab for debugging.
 
 ## Installation & Setup
 
-Install the module and peer dependency:
+Install the module (your package manager installs the `@copilotkit/vue` peer):
 
 ```bash
-pnpm add -D nuxt-copilotkit
-pnpm add @copilotkit/vue
+pnpm add -D @whoj/nuxt-copilotkit
 ```
 
-Optionally install `@copilotkit/runtime` (required for the built-in route):
-
-```bash
-pnpm add @copilotkit/runtime
-```
+The built-in route needs the optional peer `@copilotkit/runtime`; the module warns with the install command if it is missing.
 
 Enable in `nuxt.config.ts`:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['nuxt-copilotkit']
+  modules: ['@whoj/nuxt-copilotkit']
 })
 ```
 
@@ -45,10 +40,10 @@ Configure via the `copilotkit` key in `nuxt.config.ts`:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['nuxt-copilotkit'],
+  modules: ['@whoj/nuxt-copilotkit'],
   copilotkit: {
     runtime: {
-      enabled: true,              // Register built-in route (default: true)
+      enabled: true,              // Built-in route (default: on when a server runtime exists, off for ssr: false / static)
       path: '/api/_copilotkit',   // Route path (default: '/api/_copilotkit')
       url: undefined,             // External runtime URL (disables built-in route)
       model: 'openai/gpt-4o',     // Model identifier (default: 'openai/gpt-4o')

@@ -10,7 +10,22 @@ import { defaults, type ModuleOptions, type ModulePublicRuntimeConfig, type Modu
 
 export type { ModuleOptions, ModulePublicRuntimeConfig, ModuleRuntimeConfig } from './options';
 
+const logger = useLogger(name);
 const configKey = 'copilotkit' as const;
+
+/**
+ * Warns with the package-manager-specific install command when a peer dependency is missing.
+ *
+ * @param pkg - Package name to check
+ * @param rootDir - Project root used to detect the package manager
+ */
+async function warnIfMissing(pkg: string, rootDir: string): Promise<void> {
+  if (!await ensureDependencyInstalled(pkg, { prompt: true, rootDir })) {
+    const command = await getAddDependencyCommand(pkg, rootDir);
+
+    logger.warn(`\`${pkg}\` is required. Run \`${command}\` to install it.`);
+  }
+}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
@@ -23,7 +38,11 @@ export default defineNuxtModule<ModuleOptions>({
   },
   // Default configuration options of the Nuxt module
   defaults,
-  async setup(options, nuxt) {
+  // One-time check on install instead of on every build (Nuxt module best practices).
+  async onInstall(nuxt) {
+    await warnIfMissing('@copilotkit/vue', nuxt.options.rootDir);
+  },
+  setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
 
     // Resolve runtimeUrl from ONE source per ARCHITECTURE §2:
@@ -33,6 +52,15 @@ export default defineNuxtModule<ModuleOptions>({
     let runtimeUrl: string;
     const runtime = options.runtime;
 
+    // The built-in route needs a live Nitro server: off by default for SPA (`ssr: false`) and
+    // static output (`nuxi generate` sets `nitro.static`). An explicit `runtime.enabled` wins.
+    const hasServerRuntime = nuxt.options.ssr !== false && !nuxt.options.nitro.static;
+
+    if (runtime !== false) {
+      // Write the resolved value back so DevTools and later checks see the effective mode.
+      runtime.enabled ??= hasServerRuntime;
+    }
+
     if (runtime === false) {
       runtimeUrl = '';
     }
@@ -40,13 +68,17 @@ export default defineNuxtModule<ModuleOptions>({
       // External runtime mode
       runtimeUrl = runtime.url;
     }
-    else if (runtime.enabled !== false) {
-      // Built-in route enabled (default)
+    else if (runtime.enabled) {
+      // Built-in route enabled (default when a server runtime exists)
       runtimeUrl = runtime.path ?? '/api/_copilotkit';
     }
     else {
       // runtime.enabled === false without url -> no route, empty URL
       runtimeUrl = '';
+
+      if (!hasServerRuntime) {
+        logger.warn('No server runtime (`ssr: false` or static generation), so the built-in route is off. Set `copilotkit.runtime.url` or `NUXT_PUBLIC_COPILOTKIT_RUNTIME_URL`, or `copilotkit.runtime.enabled: true` if you deploy a server.');
+      }
     }
 
     // One-way options -> runtimeConfig (private)
@@ -85,16 +117,10 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.css.push('@copilotkit/vue/styles.css');
     }
 
-    const logger = useLogger(name);
-
     // (a) Built-in route registration (runtimeUrl non-empty and no runtime.url)
     if (runtimeUrl && runtime !== false && !runtime.url) {
       // Ensure @copilotkit/runtime is available when built-in route is enabled
-      if (!await ensureDependencyInstalled('@copilotkit/runtime')) {
-        const command = await getAddDependencyCommand('@copilotkit/runtime', nuxt.options.rootDir);
-
-        logger.warn(`\`@copilotkit/runtime\` is required. Run \`${command}\` to install it.`);
-      }
+      warnIfMissing('@copilotkit/runtime', nuxt.options.rootDir);
 
       // Register both base path and wildcard path
       addServerHandler({
@@ -156,13 +182,6 @@ export default defineNuxtModule<ModuleOptions>({
     ];
 
     if (options.components !== false) {
-      // Ensure @copilotkit/vue is available
-      if (!await ensureDependencyInstalled('@copilotkit/vue')) {
-        const command = await getAddDependencyCommand('@copilotkit/vue', nuxt.options.rootDir);
-
-        logger.warn(`\`@copilotkit/vue\` is required. Run \`${command}\` to install it.`);
-      }
-
       const prefix = options.components.prefix ?? '';
       const includeSet = options.components.include ? new Set(options.components.include) : null;
       const globalFlag = options.components.global ?? true;
@@ -235,6 +254,7 @@ export default defineNuxtModule<ModuleOptions>({
     const usesBuiltInRuntime = runtimeUrl !== '' && runtime !== false && !runtime.url;
     const agentImport = usesBuiltInRuntime ? 'import type { AbstractAgent } from \'@ag-ui/client\';' : '';
     const agentType = usesBuiltInRuntime ? 'AbstractAgent' : 'unknown';
+
     addTypeTemplate({
       filename: 'types/nuxt-copilotkit.d.ts',
       getContents: () => `// auto-created by nuxt-copilotkit
@@ -245,7 +265,7 @@ export default defineNuxtModule<ModuleOptions>({
 import type { H3Event } from 'h3';
 ${agentImport}
 
-declare module 'nitropack' {
+declare module 'nitropack/types' {
   interface NitroRuntimeHooks {
     /**
      * Called once during runtime initialization with the agents registry.

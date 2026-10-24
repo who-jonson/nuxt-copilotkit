@@ -1,81 +1,91 @@
+<div align="center">
+
 # nuxt-copilotkit
+
+**AI copilots, generative UI and agents for Nuxt — SSR-safe, zero-boilerplate, powered by [CopilotKit](https://copilotkit.ai).**
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 
-SSR-safe CopilotKit integration for Nuxt 4 — built-in Nitro runtime route, GenUI/HITL helpers, and a devtools tab.
+[Features](#features) · [Quick start](#quick-start) · [Usage](#usage) · [Configuration](#configuration) · [Server](#server-runtime) · [AI agent skill](#ai-agent-skill) · [Architecture](./ARCHITECTURE.md)
 
-- [📖 &nbsp;Architecture](/ARCHITECTURE.md)
-- [📋 &nbsp;Implementation Plan](/docs/plans/2026-10-23-nuxt-copilotkit-implementation-plan.md)
+</div>
 
-## Status
+> [!WARNING]
+> **v1 is in active development.** The API surface is locked in [ARCHITECTURE.md](./ARCHITECTURE.md), but expect rough edges until the first stable release.
 
-**v1 is currently in development.** This module provides the core integration surface defined in the implementation plan:
+## Why
 
-- SSR-safe hydration for CopilotKit components
-- Built-in Nitro route (`/api/_copilotkit`) for runtime integration
-- Hybrid provider with zero-template client plugin and `<CopilotKit>` wrapper
-- Pass-through composables via `#copilotkit` and auto-registered upstream components
-- GenUI/HITL helpers (`useCopilotGenUI`, `useCopilotHITL`)
-- DevTools tab for configuration and health monitoring
+[`@copilotkit/vue`](https://docs.copilotkit.ai) gives you chat UIs, frontend tools and generative UI; [`@copilotkit/runtime`](https://docs.copilotkit.ai) talks to models and [AG-UI](https://docs.ag-ui.com) agents. Wiring both into Nuxt by hand means a server route, a provider that must not run during SSR, component registration, and secrets that must stay on the server.
 
-## Quick Setup
+`nuxt-copilotkit` does that wiring for you, the Nuxt way: one module, configured from `nuxt.config`, with runtime config and env overrides.
 
-1. Install the module and required peer dependencies:
+## Features
 
-```bash
-pnpm add -D nuxt-copilotkit
-```
+- ⚡️ **Built-in runtime route** — a Nitro handler at `/api/_copilotkit`, created lazily on first request
+- 🛡️ **SSR-safe** — the `<CopilotKit>` wrapper renders its slot on the server; browser-only code never runs in SSR
+- 🧩 **Auto-registered** — every upstream `@copilotkit/vue` component and composable, auto-imported and also available from `#copilotkit`
+- 🎨 **Generative UI & human-in-the-loop** — `useCopilotGenUI` and `useCopilotHITL`, with components resolvable by name
+- 🤖 **Bring any agent** — register remote AG-UI agents (LangGraph, Google ADK, Claude Agent SDK, VoltAgent, A2A bridges, …) by URL
+- 🪝 **Extensible server** — `copilotkit:*` Nitro hooks, or full control with `defineCopilotRuntime`
+- 🔐 **Secrets stay server-side** — API keys and agent headers live in private `runtimeConfig`
+- 🛠️ **Nuxt DevTools tab** — inspect runtime mode, resolved config and API key status
+- 🧠 **Ships an AI agent skill** — teach Claude Code, Cursor & co. how to use the module
 
-2. Install the required peer dependency `@copilotkit/vue`:
-
-```bash
-pnpm add @copilotkit/vue
-```
-
-3. Optionally install `@copilotkit/runtime` (only needed when using the built-in Nitro route):
+## Quick start
 
 ```bash
-pnpm add @copilotkit/runtime
+npx nuxt module add @whoj/nuxt-copilotkit
 ```
 
-4. Add `nuxt-copilotkit` to the `modules` section of `nuxt.config.ts`:
-
-```ts
-export default defineNuxtConfig({
-  modules: [
-    'nuxt-copilotkit'
-  ]
-})
-```
-
-That's it! You can now use nuxt-copilotkit in your Nuxt app ✨
-
-## Usage
-
-### Basic Setup
-
-Set your provider API key:
+Add your model key to `.env`:
 
 ```bash
 NUXT_COPILOTKIT_OPENAI_API_KEY=sk-...
 ```
 
-The module registers the built-in runtime route (`/api/_copilotkit`), all upstream `@copilotkit/vue` components and the `#copilotkit` composables. Wrap your layout in the SSR-safe `<CopilotKit>` component (the upstream provider cannot be installed headlessly), then use components and composables anywhere:
+Wrap your app and drop in a chat:
 
 ```vue
-<!-- app.vue -->
+<!-- app/app.vue -->
 <template>
   <CopilotKit>
     <NuxtPage />
+    <CopilotSidebar />
   </CopilotKit>
 </template>
 ```
 
+That's it ✨ — `CopilotSidebar` talks to `/api/_copilotkit`, which runs `openai/gpt-4o` by default.
+
+> [!TIP]
+> Your package manager installs `@copilotkit/vue`. `@copilotkit/runtime` is an optional peer, only needed for the built-in route; if it is missing, the module prints the exact install command.
+
+<details>
+<summary>Manual install</summary>
+
+```bash
+pnpm add -D @whoj/nuxt-copilotkit
+```
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@whoj/nuxt-copilotkit']
+})
+```
+
+</details>
+
+## Usage
+
+### Frontend tools
+
+Let the model call functions in the browser. All upstream composables are auto-imported:
+
 ```vue
-<!-- pages/index.vue -->
 <script setup lang="ts">
 useFrontendTool({
   name: 'sayHello',
@@ -83,134 +93,192 @@ useFrontendTool({
   handler: async ({ name }: { name: string }) => `Hello, ${name}!`
 })
 </script>
-
-<template>
-  <CopilotSidebar />
-</template>
 ```
 
-> `<CopilotKit>` renders its slot on the server and mounts the live provider after hydration, so the wrapped subtree is remounted once on the client. Keep heavy page state out of the wrapper's direct children if that matters.
+### Generative UI
 
-### Custom Configuration
+Render your own component while a tool runs. `render` accepts a component, a render function, or the **name** of a globally registered component:
 
-Configure via the `copilotkit` key in `nuxt.config.ts`:
+```vue
+<script setup lang="ts">
+import { z } from 'zod'
 
-```ts
-export default defineNuxtConfig({
-  modules: ['nuxt-copilotkit'],
-  copilotkit: {
-    runtime: {
-      path: '/api/copilot',      // Custom route path
-      model: 'openai/gpt-4o'      // Model identifier
-    },
-    provider: {
-      debug: true,                 // Enable debug logging
-      inspector: 'dev'             // Show CopilotKit Inspector in dev
-    },
-    components: {
-      global: true                 // Register components globally (required for GenUI)
-    }
-  }
+useCopilotGenUI({
+  name: 'showWeather',
+  description: 'Show the weather for a city',
+  parameters: z.object({ city: z.string() }),
+  render: 'WeatherCard' // resolved from components/WeatherCard.vue
 })
+</script>
 ```
 
-### Connecting an agent framework (remote AG-UI agents)
+Use `name: '*'` to register a catch-all renderer for any tool without its own UI.
 
-Any backend that speaks the [AG-UI](https://docs.copilotkit.ai) HTTP protocol (Google ADK, Claude Agent SDK, VoltAgent, LangGraph, A2A bridges, ...) can be registered by URL. Remote agents replace the default `BuiltInAgent`, so no model API key is needed in Nuxt:
+### Human in the loop
+
+Pause the agent until the user responds:
+
+```vue
+<script setup lang="ts">
+useCopilotHITL({
+  name: 'confirmBooking',
+  description: 'Ask the user to confirm a booking',
+  render: 'ConfirmBooking'
+})
+</script>
+```
+
+Both helpers are no-ops during SSR and show up in the DevTools registry.
+
+### SSR behaviour
+
+`<CopilotKit>` renders its slot on the server and mounts the live provider after hydration, so the wrapped subtree remounts once on the client. Keep heavy page state out of its direct children if that matters.
+
+## Configuration
+
+Everything lives under the `copilotkit` key. Defaults shown:
 
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
+  modules: ['@whoj/nuxt-copilotkit'],
+  copilotkit: {
+    runtime: {                    // `false` disables all server registrations
+      enabled: undefined,         // auto: on when a server runtime exists (not `ssr: false`/static)
+      path: '/api/_copilotkit',   // registers `path` and `path/**`
+      url: undefined,             // external runtime; skips the built-in route
+      model: 'openai/gpt-4o',
+      agents: {}                  // remote AG-UI agents, see below
+    },
+    provider: {
+      autoWrap: true,             // client plugin providing module context
+      debug: false,               // upstream debug logging
+      inspector: false            // `true` | `'dev'`; never runs in SSR/production
+    },
+    components: {                 // `false` disables registration
+      prefix: '',
+      global: true,               // required for GenUI by-name resolution
+      include: undefined          // restrict to a list of components
+    },
+    imports: {},                  // `false` | { prefix, include }
+    styles: true,                 // inject the upstream stylesheet
+    devtools: true
+  }
+})
+```
+
+### Environment variables
+
+| Variable | Purpose |
+|---|---|
+| `NUXT_COPILOTKIT_OPENAI_API_KEY` | OpenAI key for the built-in runtime (server only) |
+| `NUXT_COPILOTKIT_ANTHROPIC_API_KEY` | Anthropic key for the built-in runtime (server only) |
+| `NUXT_COPILOTKIT_MODEL` | Override `runtime.model` |
+| `NUXT_PUBLIC_COPILOTKIT_RUNTIME_URL` | Runtime endpoint used by the client (needed with `runtime: false`) |
+| `NUXT_PUBLIC_COPILOTKIT_DEBUG` | Upstream debug flag |
+
+### Remote AG-UI agents
+
+Any backend that speaks [AG-UI](https://docs.ag-ui.com) over HTTP can be registered by URL. Remote agents replace the default built-in agent, so Nuxt needs no model key:
+
+```ts
+export default defineNuxtConfig({
   copilotkit: {
     runtime: {
       agents: {
-        default: { url: 'http://localhost:8000/agent', headers: { Authorization: 'Bearer ...' } }
+        default: {
+          url: 'http://localhost:8000/agent',
+          headers: { Authorization: `Bearer ${process.env.AGENT_TOKEN}` } // kept in private runtimeConfig
+        }
       }
     }
   }
 })
 ```
 
-This needs `@copilotkit/runtime` (which brings `@ag-ui/client`). Select a non-`default` agent in the UI with the component's `agent-id` prop.
+Select a non-`default` agent with the component's `agent-id` prop.
 
-### Server Runtime Utilities
+### Bring your own runtime
 
-For dynamic setups, customize the runtime from a server plugin or the Nitro hook; the factory runs once, lazily, on the first request:
+Point the client at a runtime hosted elsewhere and skip the built-in route:
+
+```ts
+export default defineNuxtConfig({
+  copilotkit: { runtime: { url: 'https://copilot.example.com/api' } }
+})
+```
+
+## Server runtime
+
+### Hooks
+
+The module calls typed Nitro runtime hooks you can listen to from a server plugin:
+
+| Hook | When | Payload |
+|---|---|---|
+| `copilotkit:runtime` | once, when the runtime is created | `{ event, agents }` — mutate `agents` in place |
+| `copilotkit:request` | every request to the runtime route | `event` |
+| `copilotkit:threads` | reserved for thread features | `{ event, threadId? }` |
 
 ```ts
 // server/plugins/copilotkit.ts
 export default defineNitroPlugin((nitro) => {
   nitro.hooks.hook('copilotkit:runtime', ({ agents }) => {
-    // Mutate `agents` in place; reassigning `agents` has no effect.
     agents.research = createRemoteAgent({ url: process.env.RESEARCH_AGENT_URL! })
   })
 })
 ```
 
-Or take full control with `defineCopilotRuntime(factory)` (`#copilotkit/server`, also auto-imported in server code), which must return a `CopilotRuntime`.
+> [!NOTE]
+> The hook types are added to both the server **and** app type contexts. During SSR your `components`, `composables` and plugins run inside the same Nitro process, so hook calls and handlers made from SSR code are type-checked too.
 
-Server utilities: `defineCopilotRuntime`, `getCopilotRuntime`, `createRemoteAgent`.
+### Full control
 
-### SSR Safety
+Return your own `CopilotRuntime` with `defineCopilotRuntime(factory)`. Server utilities (`defineCopilotRuntime`, `getCopilotRuntime`, `createRemoteAgent`) are auto-imported in server code and available from `#copilotkit/server`.
 
-The `<CopilotKit>` wrapper renders its slot on the server (no browser code runs during SSR). All CopilotKit composables are client-only and safe to use with SSR.
+## DevTools
 
-`provider.autoWrap` (default `true`) registers the module's client plugin, which provides module context and prints a one-line dev hint. Set it to `false` to skip the plugin and the hint:
+With [Nuxt DevTools](https://devtools.nuxt.com) enabled, a **CopilotKit** tab shows the runtime mode, resolved public config, API key status (never the key itself) and module options.
 
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  copilotkit: {
-    provider: { autoWrap: false }
-  }
-})
-```
+## AI agent skill
 
-```vue
-<!-- app.vue -->
-<template>
-  <CopilotKit>
-    <NuxtPage />
-  </CopilotKit>
-</template>
-```
-
-## Development
+The repo ships a skill that teaches coding agents how to use this module. Install it with whichever tool you use:
 
 ```bash
-# Install dependencies
-pnpm install
+# Any agent (Claude Code, Cursor, Codex, …) via skills.sh
+npx skills add who-jonson/nuxt-copilotkit
 
-# Generate type stubs
-pnpm dev:prepare
-
-# Develop with playground
-pnpm dev
-
-# Develop with playground, with bundled client ui
-pnpm play:prod
-
-# Run ESLint
-pnpm lint
-
-# Run Vitest
-pnpm test
+# Claude Code plugin marketplace
+claude plugin marketplace add who-jonson/nuxt-copilotkit
+claude plugin install nuxt-copilotkit@whoj
 ```
 
-## Documentation
+## Contributing
 
-- **[ARCHITECTURE.md](/ARCHITECTURE.md)** — Module layering, configuration flow, SSR boundary, and complete `ModuleOptions` reference
-- **[Implementation Plan](/docs/plans/2026-10-23-nuxt-copilotkit-implementation-plan.md)** — Design decisions, success criteria, test matrix, and phased rollout
+```bash
+pnpm install
+pnpm dev:prepare   # stub build + type generation
+pnpm dev           # playground
+pnpm lint
+pnpm test
+pnpm test:types
+```
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for layering, config flow and the SSR boundary before changing module code.
+
+## License
+
+[MIT](./LICENSE)
 
 <!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/nuxt-copilotkit/latest.svg?style=flat&colorA=18181B&colorB=28CF8D
-[npm-version-href]: https://npmjs.com/package/nuxt-copilotkit
+[npm-version-src]: https://img.shields.io/npm/v/@whoj/nuxt-copilotkit/latest.svg?style=flat&colorA=020420&colorB=00DC82
+[npm-version-href]: https://npmjs.com/package/@whoj/nuxt-copilotkit
 
-[npm-downloads-src]: https://img.shields.io/npm/dm/nuxt-copilotkit.svg?style=flat&colorA=18181B&colorB=28CF8D
-[npm-downloads-href]: https://npmjs.com/package/nuxt-copilotkit
+[npm-downloads-src]: https://img.shields.io/npm/dm/@whoj/nuxt-copilotkit.svg?style=flat&colorA=020420&colorB=00DC82
+[npm-downloads-href]: https://npm.chart.dev/@whoj/nuxt-copilotkit
 
-[license-src]: https://img.shields.io/npm/l/nuxt-copilotkit.svg?style=flat&colorA=18181B&colorB=28CF8D
-[license-href]: https://npmjs.com/package/nuxt-copilotkit
+[license-src]: https://img.shields.io/npm/l/@whoj/nuxt-copilotkit.svg?style=flat&colorA=020420&colorB=00DC82
+[license-href]: https://npmjs.com/package/@whoj/nuxt-copilotkit
 
-[nuxt-src]: https://img.shields.io/badge/Nuxt-18181B?logo=nuxt
+[nuxt-src]: https://img.shields.io/badge/Nuxt-020420?logo=nuxt
 [nuxt-href]: https://nuxt.com

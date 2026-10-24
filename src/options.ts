@@ -27,7 +27,10 @@ export interface ModuleOptions {
    * or `runtimeConfig.public.copilotkit.runtimeUrl` in `nuxt.config.ts`) since no built-in route exists.
    */
   runtime: false | {
-    /** Register the built-in CopilotKit runtime route. @default true */
+    /**
+     * Register the built-in CopilotKit runtime route.
+     * @default `true` when the app has a server runtime (`ssr` is not `false` and output is not static), otherwise `false`
+     */
     enabled?: boolean;
     /** Runtime endpoint path; both `path` and `path/**` routes are registered. @default '/api/_copilotkit' */
     path?: string;
@@ -79,7 +82,6 @@ export interface ModuleOptions {
  */
 export const defaults: ModuleOptions = {
   runtime: {
-    enabled: true,
     path: '/api/_copilotkit',
     model: 'openai/gpt-4o'
   },

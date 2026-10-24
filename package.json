@@ -1,7 +1,7 @@
 {
-  "name": "nuxt-copilotkit",
+  "name": "@whoj/nuxt-copilotkit",
   "version": "0.0.1",
-  "description": "SSR-safe CopilotKit integration for Nuxt 4 — built-in Nitro runtime route, GenUI/HITL helpers, and a devtools tab",
+  "description": "SSR-safe CopilotKit integration for Nuxt — built-in Nitro runtime route, GenUI/HITL helpers, and a devtools tab",
   "license": "MIT",
   "type": "module",
   "repository": "who-jonson/nuxt-copilotkit",
@@ -79,5 +79,13 @@
     "vitest": "catalog:dev",
     "vue-tsc": "catalog:dev"
   },
-  "packageManager": "pnpm@12.15.0"
+  "packageManager": "pnpm@12.15.0",
+  "author": {
+    "name": "B. Jonson",
+    "url": "https://whoj.dev"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  }
 }

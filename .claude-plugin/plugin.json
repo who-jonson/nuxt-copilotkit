@@ -1,0 +1,21 @@
+{
+  "name": "nuxt-copilotkit",
+  "description": "Skill for building Nuxt apps with nuxt-copilotkit: runtime route, defineCopilotRuntime, GenUI/HITL composables, DevTools.",
+  "version": "0.0.1",
+  "author": {
+    "name": "B. Jonson",
+    "url": "https://whoj.dev"
+  },
+  "homepage": "https://github.com/who-jonson/nuxt-copilotkit",
+  "repository": "https://github.com/who-jonson/nuxt-copilotkit.git",
+  "license": "MIT",
+  "keywords": [
+    "nuxt",
+    "copilotkit",
+    "ag-ui",
+    "gen-ui",
+    "generative-ui",
+    "vue",
+    "agent-in-browser"
+  ]
+}

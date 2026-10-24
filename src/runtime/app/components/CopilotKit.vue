@@ -8,7 +8,7 @@
 import { onMounted, ref } from 'vue';
 import { CopilotKitProvider } from '@copilotkit/vue';
 import { useRuntimeConfig } from '#imports';
-import type { ModulePublicRuntimeConfig } from 'nuxt-copilotkit';
+import type { ModulePublicRuntimeConfig } from '@whoj/nuxt-copilotkit';
 
 defineOptions({ inheritAttrs: false });
 

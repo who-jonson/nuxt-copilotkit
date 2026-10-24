@@ -92,7 +92,7 @@ Three hooks declared with types in v1, no-op by default — vNext features attac
 ```ts
 interface ModuleOptions {
   runtime: false | {
-    enabled: boolean          // default true → built-in route registered
+    enabled?: boolean         // default: true when a server runtime exists (ssr !== false, not static), else false
     path: string              // default '/api/_copilotkit' (route + '/**' registered)
     url?: string              // external runtime URL (disables built-in route)
     model?: string            // default 'openai/gpt-4o'

@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     /**
      * The module under development.
      */
-    'nuxt-copilotkit',
+    '@whoj/nuxt-copilotkit',
     /**
      * Start a sub Nuxt Server for developing the devtools client.
      *
@@ -28,7 +28,7 @@ export default defineNuxtConfig({
             cwd: resolve('../client')
           },
           {
-            id: 'nuxt-copilotkit:client',
+            id: 'whoj:nuxt-copilotkit',
             name: 'Nuxt CopilotKit Client Dev'
           }
         );
@@ -40,7 +40,7 @@ export default defineNuxtConfig({
     enabled: true
   },
   alias: {
-    'nuxt-copilotkit': resolve('../src/module')
+    '@whoj/nuxt-copilotkit': resolve('../src/module')
   },
 
   compatibilityDate: 'latest',

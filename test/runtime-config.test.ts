@@ -105,6 +105,28 @@ describe('runtime-config fixture', () => {
     });
   });
 
+  describe('SPA mode (ssr: false)', async () => {
+    await setup({
+      rootDir: fileURLToPath(new URL('./fixtures/runtime-config-spa', import.meta.url))
+    });
+
+    it('turns the built-in route off by default when there is no server runtime', async () => {
+      const response = await $fetch<{ public: { runtimeUrl: string } }>('/api/config');
+      expect(response.public.runtimeUrl).toBe('');
+    });
+  });
+
+  describe('SPA mode with explicit runtime.enabled', async () => {
+    await setup({
+      rootDir: fileURLToPath(new URL('./fixtures/runtime-config-spa-enabled', import.meta.url))
+    });
+
+    it('keeps the built-in route when runtime.enabled is set explicitly', async () => {
+      const response = await $fetch<{ public: { runtimeUrl: string } }>('/api/config');
+      expect(response.public.runtimeUrl).toBe('/api/_copilotkit');
+    });
+  });
+
   describe('user runtimeConfig wins mode', async () => {
     // Fixture validates user runtimeConfig beats module defaults
     // User sets openaiApiKey='user-key' and debug=true; module sets provider.debug=false

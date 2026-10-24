@@ -6,10 +6,10 @@
  */
 import { defineNuxtPlugin } from '#app';
 import { NuxtCopilotKitKey } from './copilotkit/keys';
-import type { ModulePublicRuntimeConfig } from 'nuxt-copilotkit';
+import type { ModulePublicRuntimeConfig } from '@whoj/nuxt-copilotkit';
 
 export default defineNuxtPlugin({
-  name: 'nuxt-copilotkit:client',
+  name: 'whoj:nuxt-copilotkit',
   parallel: true,
   async setup({ $config, vueApp }) {
   // Read public runtime config defensively (runtimeUrl + debug)
