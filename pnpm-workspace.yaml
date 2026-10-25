@@ -1,7 +1,7 @@
 allowBuilds:
   '@scarf/scarf': true
   esbuild: false
-  inotify: set this to true or false
+  inotify: false
   unrs-resolver: false
 
 catalogs:
