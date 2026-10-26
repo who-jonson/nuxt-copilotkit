@@ -1,0 +1,19 @@
+// Worker settings Nitro cannot infer. The cloudflare_module preset merges this file into
+// .output/server/wrangler.json and adds main, the assets directory and binding. The
+// compatibility date is pinned here because the preset does not take it from nuxt.config.ts.
+// The account comes from `wrangler login` or CLOUDFLARE_ACCOUNT_ID; nothing secret belongs in
+// this file. There is no d1_databases entry on purpose: the site needs no database (P9).
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "nuxt-copilotkit-docs",
+  "compatibility_date": "2026-10-26",
+  "assets": {
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    // The bare prefix is listed too so /nuxt-copilotkit reaches the Worker and redirects to /nuxt-copilotkit/.
+    { "pattern": "oss.whoj.dev/nuxt-copilotkit", "zone_name": "whoj.dev" },
+    { "pattern": "oss.whoj.dev/nuxt-copilotkit/*", "zone_name": "whoj.dev" }
+  ]
+}

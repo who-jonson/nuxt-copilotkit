@@ -13,7 +13,8 @@ export default createConfigForNuxt({
     root: [
       '',
       'playground',
-      'client'
+      'client',
+      'documentation'
     ]
   }
 });

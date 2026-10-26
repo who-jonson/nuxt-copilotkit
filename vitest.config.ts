@@ -21,8 +21,8 @@ import { configDefaults } from 'vitest/config';
 export default defineVitestConfig({
   test: {
     environment: 'node',
-    // Keep sibling git worktrees and the pnpm store out of test discovery.
+    // Keep the docs package, harness folders (worktrees included) and the pnpm store out of test discovery.
     // *.unit.test.ts run under vitest.unit.config.ts (plain Vite, no Nuxt plugin).
-    exclude: [...configDefaults.exclude, '.pi/**', '.pnpm-store/**', '**/*.unit.test.ts']
+    exclude: [...configDefaults.exclude, '.pi/**', '.optimus/**', '.claude/**', '.agents/**', '.pnpm-store/**', 'documentation/**', '**/*.unit.test.ts']
   }
 });
