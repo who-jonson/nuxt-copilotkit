@@ -1,25 +1,45 @@
-# nuxt-copilotkit Documentation
+# nuxt-copilotkit documentation
 
-This directory is reserved as the root of the future documentation site, built with [Docus](https://docus.dev) on [@nuxt/content](https://content.nuxt.com). The published markdown content will live in `documentation/content/`.
+Source of the documentation site at <https://oss.whoj.dev/nuxt-copilotkit/>, built with [Docus](https://docus.dev), prerendered and served by a Cloudflare Worker.
 
-**Current status:** Documentation site build is deferred post-v1 (decision D10 from the implementation plan).
+`docs/plans/` holds internal design documents and is never published.
 
-## Documentation Structure (Planned)
+## Commands
 
-- **`documentation/content/`** — Published user-facing documentation
-- **`docs/plans/`** — Internal design and planning documents (never published)
+Run from the repository root:
 
-These are fully separate trees: internal planning docs remain in `docs/` and are never exposed in the published site.
+| Command | Purpose |
+|---|---|
+| `pnpm docs:dev` | Dev server |
+| `pnpm docs:build` | `nuxt build` with the `cloudflare_module` preset |
+| `pnpm docs:deploy` | Build, run the output tests, then `wrangler deploy` |
 
-## Diagramming
+Run from `documentation/`:
 
-All diagrams use [Mermaid](https://mermaid.js.org) syntax.
+| Command | Purpose |
+|---|---|
+| `pnpm run preview` | `wrangler dev` on the built Worker, port 8787 |
+| `pnpm run test:output` | Checks on the prerendered files: required files, base-path prefix, internal links |
+| `pnpm run test` | The output checks plus HTTP checks; starts `wrangler dev` itself unless `DOCS_URL` is set |
 
-## Reference Materials
+## How the base path works
 
-- [ARCHITECTURE.md](../ARCHITECTURE.md) — Module layering, configuration flow, SSR boundary, and `ModuleOptions` reference
-- [Implementation Plan](../docs/plans/2026-10-23-nuxt-copilotkit-implementation-plan.md) — Design decisions, success criteria, and phased rollout
+The domain is shared by several libraries, so this site owns only `/nuxt-copilotkit/*`:
 
----
+- `app.baseURL` is `/nuxt-copilotkit/`, so every generated URL carries the prefix.
+- Workers Static Assets match the full request path; the `cloudflare_module` preset writes the files to `.output/public/nuxt-copilotkit/` for that reason.
+- `wrangler.jsonc` holds the Worker name, routes and asset handling. Nitro merges it into `.output/server/wrangler.json`, which `wrangler --cwd .output dev` and `deploy` use.
+- The routes `oss.whoj.dev/nuxt-copilotkit` and `oss.whoj.dev/nuxt-copilotkit/*` send requests to the Worker.
 
-*This stub satisfies gate G5 from the implementation plan.*
+The Docus MCP endpoint is disabled; `llms.txt` and `llms-full.txt` are still generated.
+
+## Deploying
+
+`wrangler deploy` uses the account from `wrangler login` or `CLOUDFLARE_ACCOUNT_ID`. Never commit account ids or tokens.
+
+## Writing pages
+
+- Follow the existing sections in `content/` (numeric prefixes set the order).
+- Check every option, default and API against `src/`; flag conflicts with the root `README.md` instead of guessing.
+- Diagrams use Mermaid.
+- No secrets, internal URLs, local paths or tooling state; see `AGENTS.md`.
