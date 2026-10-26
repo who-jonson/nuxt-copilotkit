@@ -116,8 +116,9 @@ describe('generated output', () => {
         else if (path.includes('//')) {
           problems.push(`${file}: double slash ${url}`);
         }
-        else if (!existsSync(join(outDir, path)) || !statSync(join(outDir, path)).isFile()) {
-          problems.push(`${file}: no file for ${url}`);
+        // Page links have no extension in llms-full.txt; routeExists also accepts route.html and route/index.html.
+        else if (!routeExists(path)) {
+          problems.push(`${file}: no page or file for ${url}`);
         }
       }
     }
