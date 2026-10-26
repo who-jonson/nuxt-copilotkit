@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "name": "nuxt-copilotkit-docs",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "wrangler --cwd .output dev",
+    "test": "vitest run",
+    "test:output": "vitest run --project output",
+    "deploy": "nuxt build && vitest run --project output && wrangler --cwd .output deploy"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils": "catalog:dev",
+    "docus": "catalog:dev",
+    "nuxt": "catalog:dev",
+    "vitest": "catalog:dev",
+    "wrangler": "catalog:dev"
+  }
+}
