@@ -10,6 +10,8 @@ export default defineNuxtConfig({
   extends: ['docus'],
 
   modules: [
+    // Docus renders ```mermaid fences as plain code; this module draws them as diagrams in the browser.
+    '@barzhsieh/nuxt-content-mermaid',
     (_options: Record<string, never>, nuxt: Nuxt) => {
       nuxt.hooks.hook('modules:done', () => {
         const agentDiscovery = nuxt.options.runtimeConfig.agentDiscovery;

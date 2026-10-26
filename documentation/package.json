@@ -11,6 +11,8 @@
     "deploy": "nuxt build && vitest run --project output && wrangler --cwd .output deploy"
   },
   "devDependencies": {
+    "@barzhsieh/nuxt-content-mermaid": "catalog:dev",
+    "@nuxt/content": "catalog:dev",
     "@nuxt/test-utils": "catalog:dev",
     "docus": "catalog:dev",
     "nuxt": "catalog:dev",
