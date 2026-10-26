@@ -51,6 +51,8 @@ export default defineNuxtConfig({
       nodeCompat: true
     },
     prerender: {
+      // llms-full.txt links to the XML sitemap, which the crawler does not reach on its own.
+      routes: ['/sitemap.xml'],
       // Write route.html instead of route/index.html so slash-less links are served without a redirect.
       autoSubfolderIndex: false
     }
