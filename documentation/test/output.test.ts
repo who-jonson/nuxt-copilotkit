@@ -97,16 +97,31 @@ describe('generated output', () => {
     expect([...problems]).toEqual([]);
   });
 
-  // Report only: whether llms*.txt links should resolve is decided at Checkpoint A (contentRawMarkdown).
-  it('reports unresolved links in llms.txt and llms-full.txt', () => {
-    const markdownLink = /\]\((https:\/\/oss\.whoj\.dev\/[^)\s]*)\)/g;
+  it('resolves every site link in llms.txt and llms-full.txt', () => {
+    const markdownLink = /\]\((https:\/\/oss\.whoj\.dev\/nuxt-copilotkit\/[^)\s]*)\)/g;
+    // Served only at Worker runtime, not a static file.
+    const runtimeOnly = new Set(['.well-known/api-catalog']);
+    const problems: string[] = [];
+
     for (const file of ['llms.txt', 'llms-full.txt']) {
-      const unresolved = [...readFileSync(join(outDir, file), 'utf8').matchAll(markdownLink)]
-        .map(([, url]) => url)
-        .filter(url => checkUrl(url) !== undefined);
-      if (unresolved.length > 0) {
-        console.warn(`${file}: ${unresolved.length} unresolved link(s), e.g. ${unresolved.slice(0, 5).join(', ')}`);
+      for (const [, url] of readFileSync(join(outDir, file), 'utf8').matchAll(markdownLink)) {
+        const path = url.slice(SITE.length).replace(/[?#].*$/, '');
+        if (runtimeOnly.has(path)) {
+          continue;
+        }
+        const first = path.split('/')[0];
+        if (first === '' || first === BASE.replaceAll('/', '')) {
+          problems.push(`${file}: empty or repeated first segment ${url}`);
+        }
+        else if (path.includes('//')) {
+          problems.push(`${file}: double slash ${url}`);
+        }
+        else if (!existsSync(join(outDir, path)) || !statSync(join(outDir, path)).isFile()) {
+          problems.push(`${file}: no file for ${url}`);
+        }
       }
     }
+
+    expect(problems).toEqual([]);
   });
 });
