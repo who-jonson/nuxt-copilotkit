@@ -1,6 +1,6 @@
 ---
 seo:
-  title: nuxt-copilotkit
+  title: "nuxt-copilotkit: AI copilots and agents for Nuxt"
   description: AI copilots, generative UI and agents for Nuxt — SSR-safe, zero-boilerplate, powered by CopilotKit.
 ---
 
@@ -9,7 +9,7 @@ seo:
 nuxt-copilotkit
 
 #description
-AI copilots, generative UI and agents for Nuxt — SSR-safe, zero-boilerplate, powered by [CopilotKit](https://copilotkit.ai).
+AI copilots, generative UI and agents for Nuxt — SSR-safe, zero-boilerplate, powered by [CopilotKit](https://docs.copilotkit.ai/vue).
 
 #links
   :::u-button
